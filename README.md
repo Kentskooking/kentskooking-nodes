@@ -1,6 +1,6 @@
 # kentskooking-nodes
 
-Triangle wave-controlled iterative video sampling for ComfyUI. Generates dynamic videos with smooth parameter oscillations across frames. work in progress
+Wave-controlled iterative video sampling for ComfyUI. Generates dynamic videos with smooth parameter oscillations across frames. work in progress
 
 ## Overview
 
