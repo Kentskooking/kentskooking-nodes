@@ -4,16 +4,17 @@ Triangle wave-controlled iterative video sampling for ComfyUI. Generates dynamic
 
 ## Overview
 
-This nodepack is an attempt to speed up and make my workflow more efficient. I had this implemented with standard nodes in comfyui but it took forever and couldn't be fully automated (that workflow provided in examples). Took a bunch of inspiration from **[Comfyui-FeedbackSampler](https://github.com/pizurny/Comfyui-FeedbackSampler)** by pizurny
+This node pack fundamentally creates a frame by frame vid2vid workflow that uses image diffusion to iteratively add diffusion over each frame. TLDR: makes trippy videos reminiscent of deforum
 
-This node pack fundamentally creates a frame by frame vid2vid workflow that uses image diffusion to iteratively add diffusion over each frame using triangle wave patterns. Plan to add more wave patterns once it's all set up.
+I made this in an attempt to speed up and make my workflow more efficient. I had it working with standard nodes in comfyui but it took forever and couldn't be fully automated (that workflow provided in examples). Took a bunch of inspiration from **[Comfyui-FeedbackSampler](https://github.com/pizurny/Comfyui-FeedbackSampler)** by pizurny
 
-TLDR: makes trippy videos reminiscent of deforum
+Currently the cycles are driven by a triangle wave but I plan to add more wave patterns once it's all set up.
+
 
 
 **Key Features:**
 -  **Triangle Wave Control**: Smooth parameter oscillation with configurable cycles
--  **Frame-by-Frame Processing**: Each frame gets individually calculated parameters without manual complex float list creation
+-  **Frame-by-Frame Processing**: Each frame gets individually calculated parameters without dealing with manual float list creation
 -  **Checkpoint System**: Resume interrupted renders without losing progress (especially useful on huge batches)
 -  **Multiple Integrations**: FLUX Kontext/clipvision/style model, IPAdapter, ControlNet - all with wave modulation
 -  **Feedback Mode**: Use previous frames to influence next frame generation
