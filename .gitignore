@@ -32,3 +32,6 @@ current.log
 # Temporary files
 *.tmp
 *.temp
+
+#specific files
+comfyui_js_instructions.txt
