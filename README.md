@@ -1,22 +1,27 @@
 # kentskooking-nodes
 
-Triangle wave-controlled iterative video sampling for ComfyUI. Generate dynamic videos with smooth parameter oscillations across frames.
+Triangle wave-controlled iterative video sampling for ComfyUI. Generates dynamic videos with smooth parameter oscillations across frames. work in progress
 
 ## Overview
 
-This custom node pack provides a powerful framework for creating videos with dynamic, wave-modulated parameters. Instead of static settings, you can make steps, denoise, zoom, CLIP strength, and more oscillate smoothly across your video frames using triangle wave patterns.
+This nodepack is an attempt to speed up and make my workflow more efficient. I had this implemented with standard nodes in comfyui but it took forever and couldn't be fully automated (that workflow provided in examples). Took a bunch of inspiration from **[Comfyui-FeedbackSampler](https://github.com/pizurny/Comfyui-FeedbackSampler)** by pizurny
+
+This node pack fundamentally creates a frame by frame vid2vid workflow that uses image diffusion to iteratively add diffusion over each frame using triangle wave patterns. Plan to add more wave patterns once it's all set up.
+
+TLDR: makes trippy videos reminiscent of deforum
+
 
 **Key Features:**
-- 🌊 **Triangle Wave Control**: Smooth parameter oscillation with configurable cycles
-- 🎬 **Frame-by-Frame Processing**: Each frame gets individually calculated parameters
-- 💾 **Checkpoint System**: Resume interrupted renders without losing progress
-- 🎨 **Multiple Integrations**: Style models, IPAdapter, ControlNet - all with wave modulation
-- 🔄 **Feedback Mode**: Use previous frames to influence next frame generation
-- 🔍 **Noise Injection**: VAE-encoded noise for enhanced detail control
+-  **Triangle Wave Control**: Smooth parameter oscillation with configurable cycles
+-  **Frame-by-Frame Processing**: Each frame gets individually calculated parameters without manual complex float list creation
+-  **Checkpoint System**: Resume interrupted renders without losing progress (especially useful on huge batches)
+-  **Multiple Integrations**: FLUX Kontext/clipvision/style model, IPAdapter, ControlNet - all with wave modulation
+-  **Feedback Mode**: Use previous frames to influence next frame generation
+-  **Noise Injection**: VAE-encoded noise for enhanced detail control
 
 ## Installation
 
-### Method 1: Git Clone (Recommended)
+Git Clone 
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -25,20 +30,16 @@ git clone https://github.com/Kentskooking/kentskooking-nodes.git
 
 Restart ComfyUI and the nodes will appear under the "kentskooking" category.
 
-### Method 2: Manual Download
-
-1. Download this repository as ZIP
-2. Extract to `ComfyUI/custom_nodes/kentskooking-nodes`
-3. Restart ComfyUI
-
 ### Dependencies
 
 All core dependencies are already provided by ComfyUI. No additional installation required.
 
-**Optional** (for IPAdapter wave nodes):
+**Optional** (to use IPAdapter wave nodes you'll need to install IPAdapter):
 ```bash
 cd ComfyUI/custom_nodes
 git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git comfyui_ipadapter_plus
+
+or use manager to install ipadapter
 ```
 
 ## Node Reference
@@ -64,10 +65,11 @@ Advanced controller for start_step/end_step based sampling.
 
 **Parameters:**
 - `cycle_length`: Number of frames per complete wave cycle
+- `step_floor`: Fewest denoise steps that will be taken
 - `start_at_step`: Fixed starting step for all frames
-- `end_at_step_min/max`: Range for total sigma schedule length
+- `end_at_step`: Sets the max step level that will reset the cycle
 - `zoom_min/max`: Range for zoom factor
-- `clip_strength_min/max`: Range for CLIP conditioning strength
+- `clip_strength_min/max`: Range for CLIP conditioning strength (includes flux redux strength)
 
 #### VideoIterativeSampler
 Basic frame-by-frame video sampler with triangle wave support.
@@ -81,8 +83,8 @@ Basic frame-by-frame video sampler with triangle wave support.
 - `seed`: Random seed
 - `sampler_name/scheduler`: Sampling settings
 - `cfg`: CFG scale
-- `noise_injection_strength`: VAE-encoded noise strength (0.0-1.0)
-- `feedback_mode`: "none" or "previous_frame"
+- `noise_injection_strength`: Level of influence injected noise has (0.00-1.00)
+- `feedback_mode`: "none" or "previous_frame" (when enabled blends previous latent with current latent at 10%, exactly like the feedback sampler from 
 
 **Outputs:** `LATENT` (processed video frames)
 
@@ -185,10 +187,10 @@ Configure checkpoint/resume system for long renders.
 **Outputs:** `CHECKPOINT_CONFIG`
 
 **Files Created:**
-- `{ComfyUI_output}/video_checkpoints/video_ckpt_{run_id}.latent` (deleted on completion)
-- `{ComfyUI_output}/video_checkpoints/video_ckpt_{run_id}_preview.png` (deleted on completion)
+- `{ComfyUI_output}/video_checkpoints/video_ckpt_{run_id}.latent` This is the checkpoint file (deleted on completion)
+- `{ComfyUI_output}/video_checkpoints/video_ckpt_{run_id}_preview.png` This image contains the workflow (deleted on completion)
 
-The preview PNG contains full workflow metadata for drag-and-drop resuming.
+The preview PNG contains full workflow metadata, drop it into comfy and you can resume with all the original parameters
 
 ## Usage Examples
 
@@ -290,7 +292,7 @@ Both files are **automatically deleted** when the video completes successfully.
 
 ### VAE-Encoded Noise Injection
 
-Instead of pure Gaussian noise, generates noise in pixel space, VAE-encodes it, then blends:
+Generates noise in pixel space, VAE-encodes it, then blends with input latent (modeled after Mixlab's NoiseImage node):
 
 ```python
 noise_latent = vae.encode(noise_image)
@@ -308,31 +310,9 @@ Benefits:
 
 ### Seed Management
 
-**Critical for video consistency:**
 - Sampler seed: **CONSTANT** across all frames for temporal coherence
-- Noise injection seed: Varies per frame (unless locked) for texture variation
-
-## Troubleshooting
-
-### Nodes don't appear in ComfyUI
-- Restart ComfyUI completely
-- Check console for import errors
-- Verify directory is in `ComfyUI/custom_nodes/`
-
-### IPAdapter nodes missing
-Install the optional dependency:
-```bash
-cd ComfyUI/custom_nodes
-git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git comfyui_ipadapter_plus
-```
-
-### Checkpoint won't save (Windows error 1224)
-Update to the latest version - this issue has been fixed.
-
-### Preview PNG not saving
-- Ensure VAE is connected to the sampler's optional VAE input
-- Check console for error messages
-- Verify `video_checkpoints` directory is writable
+ -Even when set to randomize, increment, decrement, the same seed is used across all frames
+- Noise injection seed: The noise injection seed varies from the main generation seed, and by default it changes each iteration. You can lock this unique seed using the "LOCK" option in the sampler for smoother animations.
 
 ## Support
 
@@ -343,10 +323,10 @@ Update to the latest version - this issue has been fixed.
 
 This project was inspired by and references code from the following excellent ComfyUI custom nodes:
 
-- **[Comfyui-FeedbackSampler](https://github.com/FuouM/Comfyui-FeedbackSampler)** by FuouM
+- **[Comfyui-FeedbackSampler](https://github.com/pizurny/Comfyui-FeedbackSampler)** by pizurny
   - Frame-by-frame iteration pattern and structure
 
-- **[comfyui-mixlab-nodes](https://github.com/shadowcz007/comfyui-mixlab-nodes)** by shadowcz007
+- **[comfyui-mixlab-nodes](https://github.com/MixLabPro/comfyui-mixlab-nodes)** by MixLabPro
   - NoiseImage node implementation for VAE-encoded noise injection
 
 - **[ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes)** by kijai
