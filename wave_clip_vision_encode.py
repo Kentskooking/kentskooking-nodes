@@ -1,0 +1,80 @@
+import torch
+from comfy.clip_vision import Output as ClipVisionOutput
+
+
+class WaveClipVisionEncode:
+    """
+    CLIPVisionEncode variant that also enriches the wave_config with a sequence
+    of CLIP vision embeddings for cycle-based selection downstream.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "clip_vision": ("CLIP_VISION",),
+                "image": ("IMAGE",),
+                "crop": (["center", "none"], {"default": "center"}),
+                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
+            }
+        }
+
+    RETURN_TYPES = ("CLIP_VISION_OUTPUT", "TRIANGLE_WAVE_CONFIG")
+    RETURN_NAMES = ("clip_vision_output", "wave_config")
+    FUNCTION = "encode_with_wave_config"
+    CATEGORY = "kentskooking/controllers"
+
+    def encode_with_wave_config(self, clip_vision, image, crop, wave_config):
+        """
+        Encode one or more images and attach the resulting embedding sequence to
+        the wave configuration for downstream per-cycle selection.
+        """
+        crop_image = crop == "center"
+        clip_output = clip_vision.encode_image(image, crop=crop_image)
+        config = dict(wave_config)
+
+        sequence = self._split_clip_output(clip_output)
+        config["clip_vision_sequence"] = sequence
+        config["clip_vision_sequence_wrap"] = True
+        config["clip_vision_sequence_length"] = len(sequence)
+        config["clip_vision_output"] = clip_output
+
+        return (clip_output, config)
+
+    def _split_clip_output(self, clip_output):
+        """
+        Break a batched CLIP_VISION_OUTPUT into a list of single-sample outputs.
+        Each entry preserves the attribute-based API StyleModel expects.
+        """
+        attrs = list(vars(clip_output).keys())
+        batch = None
+        for key in attrs:
+            value = getattr(clip_output, key)
+            if isinstance(value, torch.Tensor) and value.dim() > 0:
+                batch = value.shape[0]
+                break
+
+        if not batch:
+            return []
+
+        sequence = []
+        for idx in range(batch):
+            single = ClipVisionOutput()
+            for key in attrs:
+                value = getattr(clip_output, key)
+                if isinstance(value, torch.Tensor) and value.shape[0] == batch:
+                    single[key] = value[idx:idx+1].clone()
+                else:
+                    single[key] = value
+            sequence.append(single)
+
+        return sequence
+
+
+NODE_CLASS_MAPPINGS = {
+    "WaveClipVisionEncode": WaveClipVisionEncode
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "WaveClipVisionEncode": "Wave CLIP Vision Encode"
+}
