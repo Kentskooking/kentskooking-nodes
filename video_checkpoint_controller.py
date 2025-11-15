@@ -10,8 +10,42 @@ class VideoCheckpointController:
     Supports creating new checkpointed runs or resuming from existing checkpoints.
     """
 
+    @staticmethod
+    def checkpoint_run_choices():
+        """Return available checkpoint run IDs discovered on disk."""
+        output_dir = folder_paths.get_output_directory()
+        checkpoint_dir = os.path.join(output_dir, "video_checkpoints")
+        if not os.path.isdir(checkpoint_dir):
+            return []
+
+        choices = []
+        for entry in os.listdir(checkpoint_dir):
+            if not entry.startswith("video_ckpt_") or not entry.endswith(".latent"):
+                continue
+            run_id = entry[len("video_ckpt_"):-len(".latent")]
+            if run_id:
+                choices.append(run_id)
+
+        # Sort newest (based on timestamp naming) first so recent runs show up at the top.
+        choices.sort(reverse=True)
+        return choices
+
     @classmethod
     def INPUT_TYPES(cls):
+        checkpoint_choices = cls.checkpoint_run_choices()
+        checkpoint_input = (
+            (checkpoint_choices, {
+                "tooltip": "Select a previously saved video checkpoint run ID.",
+                "default": checkpoint_choices[0] if checkpoint_choices else "",
+            })
+            if checkpoint_choices
+            else ("STRING", {
+                "default": "",
+                "tooltip": "No checkpoints detected yet. Either run with checkpointing enabled or enter an ID manually.",
+                "forceInput": True,
+            })
+        )
+
         return {
             "required": {
                 "enable_checkpointing": ("BOOLEAN", {"default": True}),
@@ -19,7 +53,7 @@ class VideoCheckpointController:
             },
             "optional": {
                 "load_video_checkpoint": ("BOOLEAN", {"default": False}),
-                "checkpoint_run_id": ("STRING", {"default": ""}),
+                "checkpoint_run_id": checkpoint_input,
             }
         }
 
