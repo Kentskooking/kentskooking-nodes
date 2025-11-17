@@ -8,17 +8,17 @@ This node pack fundamentally creates a frame by frame vid2vid workflow that uses
 
 I made this in an attempt to speed up and make my workflow more efficient. I had it working with standard nodes in comfyui but it took forever and couldn't be fully automated (that workflow provided in examples folder along with this nodepack's wf). Used most of the internal logic from the **[Comfyui-FeedbackSampler](https://github.com/pizurny/Comfyui-FeedbackSampler)** by pizurny
 
-Currently the cycles are driven by a triangle wave but I plan to add more wave patterns once it's all set up.
+## **Example**
+
+![Demo GIF](examples/assets/demo.gif)
 
 
 
 **Key Features:**
--  **Triangle Wave Control**: Smooth parameter oscillation with configurable cycles
--  **Frame-by-Frame Processing**: Each frame gets individually calculated parameters without dealing with manual float list creation
+-  **Wave/Cycle Control**: Smooth oscillation with configurable cycles for many parameters
+-  **Frame-by-Frame Processing**: All video frames get batch processed efficiently within the ksampler
 -  **Checkpoint System**: Resume interrupted renders without losing progress (especially useful on huge batches)
 -  **Multiple Integrations**: FLUX Kontext/clipvision/style model, IPAdapter, ControlNet - all with wave modulation built in
--  **Feedback Mode**: Use previous frames to influence next frame generation
--  **Noise Injection**: VAE-encoded noise for enhanced detail control
 
 ## Installation
 
@@ -42,14 +42,15 @@ git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git comfyui_ipadapter_
 
 or use manager to install ipadapter
 ```
-I suggest just loading the workflow in the examples folder. Currently just have a workflow setup for FLUX. I plan to add SDXL and SD1.5 workflows also but you can just build them yourself easily.
+
+**I suggest just loading the workflow  in the examples folder. Currently just have a workflow setup for FLUX. I plan to add SDXL and SD1.5 workflows also but you can just build them yourself easily.**
 
 
 ## Node Reference
 
 ### Core Nodes
 
-#### TriangleWaveController
+#### TriangleWaveController 
 Basic wave controller for steps, denoise, zoom, and CLIP strength modulation.
 
 **Outputs:** `TRIANGLE_WAVE_CONFIG`
