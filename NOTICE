@@ -1,0 +1,94 @@
+NOTICE
+
+kentskooking-nodes - Nodes for batch processing images/video frames with diffusion models
+Copyright (C) 2025 Kent (Kentskooking)
+
+This project is licensed under the GNU General Public License v3.0.
+See LICENSE file for details.
+
+================================================================================
+
+THIRD-PARTY COMPONENTS
+
+This project includes code from or is derived from the following third-party
+software projects. The combined work is licensed under GNU General Public 
+License v3.0, but the original licenses of incorporated components are 
+preserved below for attribution purposes.
+
+================================================================================
+
+1. Comfyui-FeedbackSampler
+   Copyright (c) pizurny
+   Licensed under MIT License
+   Source: https://github.com/pizurny/Comfyui-FeedbackSampler
+   Used for: Frame-by-frame iteration pattern and structure
+   
+   See: LICENSES/MIT-pizurny.txt
+
+--------------------------------------------------------------------------------
+
+2. comfyui-mixlab-nodes
+   Copyright (c) 2024 shadow (MixLabPro)
+   Licensed under MIT License
+   Source: https://github.com/MixLabPro/comfyui-mixlab-nodes
+   Used for: NoiseImage node implementation for VAE-encoded noise injection
+   
+   See: LICENSES/MIT-shadow.txt
+
+--------------------------------------------------------------------------------
+
+3. ComfyUI-KJNodes
+   Copyright (c) kijai
+   Licensed under GNU General Public License v3.0
+   Source: https://github.com/kijai/ComfyUI-KJNodes
+   Used for: InjectNoiseToLatent blending approach
+   
+   See: LICENSES/GPL-3.0.txt
+
+--------------------------------------------------------------------------------
+
+4. ComfyUI_IPAdapter_plus
+   Copyright (c) cubiq
+   Licensed under GNU General Public License v3.0
+   Source: https://github.com/cubiq/ComfyUI_IPAdapter_plus
+   Used for: IPAdapter integration and execution logic
+   
+   See: LICENSES/GPL-3.0.txt
+
+--------------------------------------------------------------------------------
+
+5. ComfyUI-Inspire-Pack
+   Copyright (c) ltdrdata
+   Licensed under GNU General Public License v3.0
+   Source: https://github.com/ltdrdata/ComfyUI-Inspire-Pack
+   Used for: KSamplerAdvanced parameter mapping reference
+   
+   See: LICENSES/GPL-3.0.txt
+
+================================================================================
+
+LICENSE INFORMATION
+
+The complete license texts for all components can be found in the LICENSES/
+directory:
+
+- LICENSES/GPL-3.0.txt - GNU General Public License v3.0
+- LICENSES/MIT-pizurny.txt - MIT License for Comfyui-FeedbackSampler
+- LICENSES/MIT-shadow.txt - MIT License for comfyui-mixlab-nodes
+
+================================================================================
+
+COMBINED WORK
+
+The combination of GPL-3.0 and MIT licensed components results in a work that
+must be distributed under GPL-3.0. While MIT code permits use in GPL projects,
+the presence of GPL-3.0 components means the entire combined work is governed
+by the GPL-3.0 license.
+
+All original code in this project that is not derived from the above sources
+is also licensed under GNU General Public License v3.0.
+
+================================================================================
+
+For questions about licensing, please open an issue at:
+https://github.com/Kentskooking/kentskooking-nodes/issues
