@@ -5,10 +5,10 @@
 # This file is provided for reference and documentation purposes.
 
 # Core dependencies (provided by ComfyUI):
-#torch
-#numpy>=1.25.0
-#Pillow
-#safetensors>=0.4.2
+torch
+numpy>=1.25.0
+Pillow
+safetensors>=0.4.2
 
 # Optional dependencies:
 # The following custom nodes are optional and enable additional features if installed:
