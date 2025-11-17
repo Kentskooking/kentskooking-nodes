@@ -1,12 +1,12 @@
 # kentskooking-nodes
 
-Wave-controlled iterative video sampling for ComfyUI. Generates dynamic videos with smooth parameter oscillations across frames. work in progress
+Wave-controlled iterative video processing for ComfyUI. Alters videos frame by frame using image diffusion pipelines. work in progress
 
 ## Overview
 
-This node pack fundamentally creates a frame by frame vid2vid workflow that uses image diffusion to iteratively add diffusion over each frame. TLDR: makes trippy videos reminiscent of deforum
+This node pack fundamentally creates a frame by frame vid2vid workflow that uses image diffusion to add progressive diffusion over each frame. TLDR: makes trippy videos reminiscent of deforum
 
-I made this in an attempt to speed up and make my workflow more efficient. I had it working with standard nodes in comfyui but it took forever and couldn't be fully automated (that workflow provided in examples). Took a bunch of inspiration from **[Comfyui-FeedbackSampler](https://github.com/pizurny/Comfyui-FeedbackSampler)** by pizurny
+I made this in an attempt to speed up and make my workflow more efficient. I had it working with standard nodes in comfyui but it took forever and couldn't be fully automated (that workflow provided in examples folder along with this nodepack's wf). Used most of the internal logic from the **[Comfyui-FeedbackSampler](https://github.com/pizurny/Comfyui-FeedbackSampler)** by pizurny
 
 Currently the cycles are driven by a triangle wave but I plan to add more wave patterns once it's all set up.
 
@@ -16,7 +16,7 @@ Currently the cycles are driven by a triangle wave but I plan to add more wave p
 -  **Triangle Wave Control**: Smooth parameter oscillation with configurable cycles
 -  **Frame-by-Frame Processing**: Each frame gets individually calculated parameters without dealing with manual float list creation
 -  **Checkpoint System**: Resume interrupted renders without losing progress (especially useful on huge batches)
--  **Multiple Integrations**: FLUX Kontext/clipvision/style model, IPAdapter, ControlNet - all with wave modulation
+-  **Multiple Integrations**: FLUX Kontext/clipvision/style model, IPAdapter, ControlNet - all with wave modulation built in
 -  **Feedback Mode**: Use previous frames to influence next frame generation
 -  **Noise Injection**: VAE-encoded noise for enhanced detail control
 
@@ -42,6 +42,8 @@ git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git comfyui_ipadapter_
 
 or use manager to install ipadapter
 ```
+I suggest just loading the workflow in the examples folder. Currently just have a workflow setup for FLUX. I plan to add SDXL and SD1.5 workflows also but you can just build them yourself easily.
+
 
 ## Node Reference
 
@@ -167,7 +169,7 @@ Control ControlNet wave modulation parameters.
 
 ### Utility Nodes
 
-#### WaveVisualizer
+#### WaveVisualizer (Development)
 Visualize triangle wave patterns over time.
 
 **Inputs:**
