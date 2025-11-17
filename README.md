@@ -19,7 +19,12 @@ I made this in an attempt to speed up and make my workflow more efficient. I had
 -  **Frame-by-Frame Processing**: All video frames get batch processed efficiently within the ksampler
 -  **Checkpoint System**: Resume interrupted renders without losing progress (especially useful on huge batches)
 -  **Multiple Integrations**: FLUX Kontext/clipvision/style model, IPAdapter, ControlNet - all with wave modulation built in
+<<<<<<< Updated upstream
 
+=======
+-  **Feedback Mode**: Use previous frames to influence next frame generation
+-  **Noise Injection**: VAE-encoded noise for enhanced detail control
+>>>>>>> Stashed changes
 
 ## Installation
 
@@ -43,7 +48,11 @@ git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git comfyui_ipadapter_
 
 or use manager to install ipadapter
 ```
+<<<<<<< Updated upstream
 **I suggest just loading the workflow in the examples folder. Currently just have a workflow setup for FLUX. I plan to add SDXL and SD1.5 workflows also but you can just build them yourself easily.**
+=======
+I suggest just loading the workflow in the examples folder. Currently just have a workflow setup for FLUX. I plan to add SDXL and SD1.5 workflows also but you can just build them yourself easily.
+>>>>>>> Stashed changes
 
 
 ## Node Reference
