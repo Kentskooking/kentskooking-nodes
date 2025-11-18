@@ -12,10 +12,10 @@ import numpy as np
 from PIL import Image
 
 # Import IPAdapter execute function
-# The comfyui_ipadapter_plus custom node is already loaded by ComfyUI
+# The ComfyUI_IPAdapter_plus custom node is already loaded by ComfyUI
 try:
     # Access the already-loaded module from custom_nodes
-    import custom_nodes.comfyui_ipadapter_plus.IPAdapterPlus as IPAdapterModule
+    import custom_nodes.ComfyUI_IPAdapter_plus.IPAdapterPlus as IPAdapterModule
     ipadapter_execute = IPAdapterModule.ipadapter_execute
     IPADAPTER_AVAILABLE = True
     print("✓ IPAdapter Plus imported successfully")
@@ -623,10 +623,10 @@ class VideoIterativeSamplerAdvanced:
         if enable_checkpoint:
             self.cleanup_checkpoint(checkpoint_dir, run_id)
 
-        print(f"  Unloading models and clearing VRAM...")
+        print(f"  Clearing VRAM cache...")
         print(f"{'='*60}\n")
 
-        comfy.model_management.unload_all_models()
+        # Light VRAM cleanup (don't unload all models globally)
         comfy.model_management.soft_empty_cache()
 
         return ({"samples": all_latents},)
