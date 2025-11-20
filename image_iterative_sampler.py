@@ -142,17 +142,22 @@ class ImageIterativeSampler:
 
         return out[0], out[1]
 
-    def calculate_wave_values(self, iteration_idx, config, num_iterations):
+    def calculate_wave_values(self, iteration_in_cycle, config, iterations_per_cycle):
         """
         Calculate zoom/clip strength for the current iteration.
-        Both use linear interpolation from min to max across all iterations.
+        Zoom uses exponential formula (constant rate per iteration).
+        Clip strength uses linear interpolation within cycle.
         """
-        if num_iterations <= 1:
+        # Exponential zoom: zoom_max is the per-iteration multiplier (e.g., 1.05 = 5%)
+        # +1 so first iteration applies zoom (not 1.0x)
+        zoom_rate = config.get("zoom_max", 1.0)
+        zoom = zoom_rate ** (iteration_in_cycle + 1)
+
+        # Linear interpolation for clip strength within cycle
+        if iterations_per_cycle <= 1:
             t = 0.0
         else:
-            t = iteration_idx / (num_iterations - 1)
-
-        zoom = config.get("zoom_min", 1.0) + (config.get("zoom_max", 1.0) - config.get("zoom_min", 1.0)) * t
+            t = iteration_in_cycle / (iterations_per_cycle - 1)
         clip_strength = config.get("clip_strength_min", 1.0) + (config.get("clip_strength_max", 1.0) - config.get("clip_strength_min", 1.0)) * t
 
         return zoom, clip_strength
@@ -210,12 +215,26 @@ class ImageIterativeSampler:
         img_tensor = torch.from_numpy(img_np).unsqueeze(0)
         return img_tensor
 
-    def inject_noise_latent(self, latent, strength, vae=None, seed=0):
-        """Inject noise into latent tensor."""
+    def generate_noise_latent(self, latent_shape, vae, seed):
+        """Generate VAE-encoded noise latent for caching."""
+        batch, channels, height, width = latent_shape
+        pixel_height = height * 8
+        pixel_width = width * 8
+
+        noise_image = self.generate_noise_image(pixel_width, pixel_height, seed, noise_level=8192)
+        noise_tensor = self.pil_to_tensor(noise_image)
+        noise_latent = vae.encode(noise_tensor)
+        return noise_latent
+
+    def inject_noise_latent(self, latent, strength, vae=None, seed=0, cached_noise_latent=None):
+        """Inject noise into latent tensor. Uses cached noise if provided."""
         if strength <= 0:
             return latent
 
-        if vae is not None:
+        if cached_noise_latent is not None:
+            # Use cached noise latent (avoids regeneration when seed is locked)
+            return latent + cached_noise_latent * strength
+        elif vae is not None:
             batch, channels, height, width = latent.shape
             pixel_height = height * 8
             pixel_width = width * 8
@@ -369,16 +388,20 @@ class ImageIterativeSampler:
             raise Exception(f"ImageIterativeSampler requires a single latent image (batch size = 1), got batch size = {input_latent.shape[0]}")
 
         if wave_config is None:
-            raise Exception("ImageIterativeSampler requires a wave_config input from TriangleWaveControllerAdvanced.")
+            raise Exception("ImageIterativeSampler requires a wave_config input from WaveController.")
 
-        # Determine number of cycles from CLIP/IPAdapter image sequences
+        # Determine number of cycles from CLIP/IPAdapter image sequences, or fall back to cycle_length
         clip_sequence = wave_config.get("clip_vision_sequence") or []
         ipadapter_sequence = wave_config.get("ipadapter_image_sequence") or []
 
-        num_cycles = max(len(clip_sequence), len(ipadapter_sequence), 1)
-
-        if num_cycles == 1:
-            print("⚠ Warning: No CLIP or IPAdapter image sequence found. Running single cycle.")
+        # If image sequences exist, use their length; otherwise fall back to cycle_length
+        if len(clip_sequence) > 0 or len(ipadapter_sequence) > 0:
+            num_cycles = max(len(clip_sequence), len(ipadapter_sequence))
+            print(f"Cycle count determined by image sequences: {num_cycles}")
+        else:
+            # Fall back to cycle_length from wave controller
+            num_cycles = max(1, wave_config.get("cycle_length", 1))
+            print(f"No image sequences found. Using cycle_length as cycle count: {num_cycles}")
 
         # Extract wave config parameters
         step_floor = max(1, wave_config.get("step_floor", 5))
@@ -386,13 +409,12 @@ class ImageIterativeSampler:
         end_at_step = wave_config.get("end_at_step", 20)
 
         # Check if zoom is enabled (linear interpolation from min to max)
-        zoom_min = wave_config.get("zoom_min", 1.0)
         zoom_max = wave_config.get("zoom_max", 1.0)
-        zoom_enabled = not (zoom_min == zoom_max == 1.0)
+        zoom_enabled = zoom_max != 1.0
 
         # Validate VAE requirement for zoom
         if zoom_enabled and vae is None:
-            raise Exception("ImageIterativeSampler requires a VAE input when zoom is enabled (zoom_min != zoom_max or either != 1.0). Please connect a VAE to enable pixel-space zoom processing.")
+            raise Exception("ImageIterativeSampler requires a VAE input when zoom is enabled (zoom_max != 1.0). Please connect a VAE to enable pixel-space zoom processing.")
 
         # Calculate iterations per cycle
         iterations_per_cycle = (end_at_step - start_at_step) - step_floor + 1
@@ -407,6 +429,18 @@ class ImageIterativeSampler:
         resume_iteration = checkpoint_config.get("resume_frame", 0)  # Reuse 'resume_frame' key
         loaded_iterations = checkpoint_config.get("loaded_latents", None)
         loaded_cycle_input = checkpoint_config.get("loaded_current_latent", None)
+        checkpoint_type = checkpoint_config.get("checkpoint_type", None)
+
+        # Validate checkpoint type if resuming from a checkpoint
+        if loaded_iterations is not None and checkpoint_type is not None:
+            expected_type = "image_iterative_sampler"
+            if checkpoint_type != expected_type:
+                raise ValueError(
+                    f"Checkpoint type mismatch!\n"
+                    f"This sampler expects: '{expected_type}'\n"
+                    f"But checkpoint was created by: '{checkpoint_type}'\n"
+                    f"Please use the correct sampler for this checkpoint."
+                )
 
         print(f"\n{'='*60}")
         print(f"ImageIterativeSampler: Processing {num_cycles} cycles x {iterations_per_cycle} iterations = {total_iterations} total")
@@ -416,9 +450,11 @@ class ImageIterativeSampler:
         print(f"  Noise injection: {noise_injection_strength}")
         print(f"  Feedback mode: {feedback_mode}")
         if zoom_enabled:
-            print(f"  Zoom: ENABLED (linear interpolation) - {zoom_min}x to {zoom_max}x across {total_iterations} iterations")
+            # Calculate cumulative zoom after all iterations for display
+            cumulative_zoom = zoom_max ** total_iterations
+            print(f"  Zoom: ENABLED (exponential) - {zoom_max}x per iteration, {cumulative_zoom:.2f}x cumulative after {total_iterations} iterations")
         else:
-            print(f"  Zoom: disabled (min=max=1.0)")
+            print(f"  Zoom: disabled (zoom_max=1.0)")
         if enable_checkpoint:
             print(f"  Checkpointing: enabled (every {checkpoint_interval} iterations)")
             print(f"  Run ID: {run_id}")
@@ -498,6 +534,12 @@ class ImageIterativeSampler:
         if style_model is not None and clip_vision_output is not None:
             cycle_style_cond = style_model.get_cond(clip_vision_output).flatten(start_dim=0, end_dim=1).unsqueeze(dim=0)
 
+        # Cache noise latent once per cycle when seed is locked (avoids repeated VAE encodes)
+        cycle_noise_latent = None
+        if lock_injection_seed and noise_injection_strength > 0 and vae is not None:
+            noise_seed = seed + 1  # Initial cycle seed offset
+            cycle_noise_latent = self.generate_noise_latent(input_latent.shape, vae, noise_seed)
+
         # Main iteration loop - process cycles
         for iteration_idx in range(start_iteration, total_iterations):
             # Determine which cycle we're in and position within cycle
@@ -513,6 +555,10 @@ class ImageIterativeSampler:
                     base_pixel_image = vae.decode(cycle_input_latent)
                 # Generate new cycle seed to prevent burn-in artifacts
                 cycle_seed = seed + (cycle_idx * 1000)
+                # Regenerate cached noise latent for new cycle (if seed is locked)
+                if lock_injection_seed and noise_injection_strength > 0 and vae is not None:
+                    noise_seed = cycle_seed + 1
+                    cycle_noise_latent = self.generate_noise_latent(cycle_input_latent.shape, vae, noise_seed)
                 print(f"\n--- Starting Cycle {cycle_idx + 1}/{num_cycles} (seed: {cycle_seed}) ---")
 
             # Calculate progressive steps for this iteration within the cycle
@@ -521,18 +567,9 @@ class ImageIterativeSampler:
             actual_end = min(current_end, end_at_step)
             actual_steps = actual_end - start_at_step
 
-            # Calculate absolute global zoom (smooth progression across all iterations)
-            zoom_abs, clip_strength = self.calculate_wave_values(iteration_idx, wave_config, total_iterations)
-
-            # Calculate absolute zoom at the start of this cycle
-            cycle_start_idx = cycle_idx * iterations_per_cycle
-            zoom_abs_cycle_start, _ = self.calculate_wave_values(cycle_start_idx, wave_config, total_iterations)
-
-            # Calculate cycle-relative zoom (accounts for zoom already in base image)
-            if zoom_abs_cycle_start > 0:
-                zoom = zoom_abs / zoom_abs_cycle_start
-            else:
-                zoom = 1.0
+            # Calculate zoom and clip strength for this iteration
+            # Exponential zoom naturally chains across cycles without needing relative calculation
+            zoom, clip_strength = self.calculate_wave_values(iteration_in_cycle, wave_config, iterations_per_cycle)
 
             # Per-iteration seed for noise injection
             if lock_injection_seed and noise_injection_strength > 0:
@@ -613,7 +650,7 @@ class ImageIterativeSampler:
                     attn_mask=ipadapter_config["attn_mask"],
                 )
 
-            print(f"Cycle {cycle_idx+1}/{num_cycles}, Iter {iteration_in_cycle+1}/{iterations_per_cycle} (total {iteration_idx+1}/{total_iterations}): steps={actual_steps}, start_step={start_at_step}, end_step={actual_end}, zoom_abs={zoom_abs:.3f}, zoom_rel={zoom:.3f}, clip_strength={clip_strength:.3f}")
+            print(f"Cycle {cycle_idx+1}/{num_cycles}, Iter {iteration_in_cycle+1}/{iterations_per_cycle} (total {iteration_idx+1}/{total_iterations}): steps={actual_steps}, start_step={start_at_step}, end_step={actual_end}, zoom={zoom:.3f}, clip_strength={clip_strength:.3f}")
 
             # Apply zoom to base image BEFORE denoising (if enabled)
             if zoom_enabled and zoom != 1.0:
@@ -628,7 +665,7 @@ class ImageIterativeSampler:
 
             # Apply noise injection (zoom moved to after denoising)
             if noise_injection_strength > 0:
-                current_latent = self.inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed)
+                current_latent = self.inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed, cached_noise_latent=cycle_noise_latent)
 
             latent_dict = {"samples": current_latent}
 

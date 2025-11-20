@@ -1,4 +1,4 @@
-class TriangleWaveControllerAdvanced:
+class WaveController:
     """
     Triangle wave controller focusing on advanced sampling ranges.
     Provides cycle-based modulation for step count, zoom, and CLIP strength
@@ -80,9 +80,9 @@ class TriangleWaveControllerAdvanced:
 
 
 NODE_CLASS_MAPPINGS = {
-    "TriangleWaveControllerAdvanced": TriangleWaveControllerAdvanced
+    "WaveController": WaveController
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "TriangleWaveControllerAdvanced": "Triangle Wave Controller (Advanced)"
+    "WaveController": "Wave Controller"
 }

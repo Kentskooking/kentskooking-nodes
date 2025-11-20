@@ -1,8 +1,8 @@
 {
   "id": "d713d62e-b36a-47b1-b228-c18110911a82",
   "revision": 0,
-  "last_node_id": 51,
-  "last_link_id": 61,
+  "last_node_id": 54,
+  "last_link_id": 71,
   "nodes": [
     {
       "id": 4,
@@ -86,7 +86,7 @@
         98
       ],
       "flags": {},
-      "order": 20,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -102,7 +102,7 @@
         {
           "name": "wave_config",
           "type": "TRIANGLE_WAVE_CONFIG",
-          "link": 3
+          "link": 63
         }
       ],
       "outputs": [
@@ -228,7 +228,7 @@
           "links": [
             7,
             21,
-            29
+            65
           ]
         }
       ],
@@ -255,7 +255,7 @@
         46
       ],
       "flags": {},
-      "order": 24,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
@@ -274,7 +274,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            27
+            67
           ]
         }
       ],
@@ -286,50 +286,6 @@
       "widgets_values": [],
       "color": "#332922",
       "bgcolor": "#593930"
-    },
-    {
-      "id": 42,
-      "type": "VideoCheckpointController",
-      "pos": [
-        -536.0900705606039,
-        981.9581327266419
-      ],
-      "size": [
-        360,
-        106
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "checkpoint_run_id",
-          "shape": 7,
-          "type": "STRING",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "checkpoint_config",
-          "type": "CHECKPOINT_CONFIG",
-          "links": [
-            51
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "Kentskooking/kentskooking-nodes",
-        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
-        "Node name for S&R": "VideoCheckpointController"
-      },
-      "widgets_values": [
-        true,
-        16,
-        false
-      ],
-      "color": "#233",
-      "bgcolor": "#355"
     },
     {
       "id": 5,
@@ -357,7 +313,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            25
+            69
           ]
         }
       ],
@@ -373,85 +329,90 @@
       "bgcolor": "#353"
     },
     {
-      "id": 26,
-      "type": "VideoIterativeSamplerAdvanced",
+      "id": 44,
+      "type": "VHS_LoadVideo",
       "pos": [
-        -127.39391816185797,
-        403.61368082234503
+        -1641.2726881413525,
+        536.7636899776185
       ],
       "size": [
-        320.3444519042969,
-        684.3444519042969
+        247.19444274902344,
+        551.1944427490234
       ],
       "flags": {},
-      "order": 26,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
-          "name": "model",
-          "type": "MODEL",
-          "link": 24
-        },
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 25
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 26
-        },
-        {
-          "name": "latent_batch",
-          "type": "LATENT",
-          "link": 27
-        },
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "link": 28
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
         },
         {
           "name": "vae",
           "shape": 7,
           "type": "VAE",
-          "link": 29
-        },
-        {
-          "name": "checkpoint_config",
-          "shape": 7,
-          "type": "CHECKPOINT_CONFIG",
-          "link": 51
+          "link": null
         }
       ],
       "outputs": [
         {
-          "name": "latent_batch",
-          "type": "LATENT",
+          "name": "IMAGE",
+          "type": "IMAGE",
           "links": [
-            32
+            57
           ]
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "video_info",
+          "type": "VHS_VIDEOINFO",
+          "links": null
         }
       ],
       "properties": {
-        "aux_id": "Kentskooking/kentskooking-nodes",
-        "ver": "adceb8cd3c20105c435890e2bc40537aa8581bf8",
-        "Node name for S&R": "VideoIterativeSamplerAdvanced"
+        "cnr_id": "comfyui-videohelpersuite",
+        "ver": "08e8df15db24da292d4b7f943c460dc2ab442b24",
+        "Node name for S&R": "VHS_LoadVideo"
       },
-      "widgets_values": [
-        8133121754906,
-        "randomize",
-        true,
-        "deis",
-        "beta",
-        1,
-        0.2,
-        "previous_frame",
-        "previous_frame"
-      ],
-      "color": "#332922",
-      "bgcolor": "#593930"
+      "widgets_values": {
+        "video": "Example_Input_02_Snake.mp4",
+        "force_rate": 12,
+        "custom_width": 0,
+        "custom_height": 0,
+        "frame_load_cap": 0,
+        "skip_first_frames": 0,
+        "select_every_nth": 1,
+        "format": "AnimateDiff",
+        "choose video to upload": "image",
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "Example_Input_02_Snake.mp4",
+            "type": "input",
+            "format": "video/mp4",
+            "force_rate": 12,
+            "custom_width": 0,
+            "custom_height": 0,
+            "frame_load_cap": 0,
+            "skip_first_frames": 0,
+            "select_every_nth": 1
+          }
+        }
+      },
+      "color": "#223",
+      "bgcolor": "#335"
     },
     {
       "id": 10,
@@ -481,7 +442,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            26
+            68
           ]
         }
       ],
@@ -556,7 +517,7 @@
         {
           "name": "images",
           "type": "LATENT",
-          "link": 32
+          "link": 71
         },
         {
           "name": "audio",
@@ -605,13 +566,13 @@
           "hidden": false,
           "paused": false,
           "params": {
-            "filename": "itervid00_00008.mp4",
+            "filename": "itervid00_00014.mp4",
             "subfolder": "iterative_video",
             "type": "output",
             "format": "video/h264-mp4",
             "frame_rate": 12,
-            "workflow": "itervid00_00008.png",
-            "fullpath": "C:\\ComfyUI\\output\\iterative_video\\itervid00_00008.mp4"
+            "workflow": "itervid00_00014.png",
+            "fullpath": "C:\\ComfyUI\\output\\iterative_video\\itervid00_00014.mp4"
           }
         }
       },
@@ -630,7 +591,7 @@
         118
       ],
       "flags": {},
-      "order": 23,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -666,7 +627,7 @@
           "name": "wave_config",
           "type": "TRIANGLE_WAVE_CONFIG",
           "links": [
-            28
+            66
           ]
         }
       ],
@@ -680,90 +641,6 @@
       ],
       "color": "#432",
       "bgcolor": "#653"
-    },
-    {
-      "id": 41,
-      "type": "ImageScaleToTotalPixels",
-      "pos": [
-        -1359.8694359556725,
-        537.8020457331605
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 21,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 57
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            50
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.68",
-        "Node name for S&R": "ImageScaleToTotalPixels"
-      },
-      "widgets_values": [
-        "lanczos",
-        0.5
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 23,
-      "type": "TriangleWaveControllerAdvanced",
-      "pos": [
-        -927.8464759359737,
-        861.9581327266419
-      ],
-      "size": [
-        328.8999938964844,
-        226
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "links": [
-            3
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "Kentskooking/kentskooking-nodes",
-        "ver": "adceb8cd3c20105c435890e2bc40537aa8581bf8",
-        "Node name for S&R": "TriangleWaveControllerAdvanced"
-      },
-      "widgets_values": [
-        37,
-        5,
-        16,
-        36,
-        1.2,
-        1,
-        1.16,
-        1.16
-      ],
-      "color": "#233",
-      "bgcolor": "#355"
     },
     {
       "id": 2,
@@ -793,7 +670,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            24
+            70
           ]
         }
       ],
@@ -823,7 +700,7 @@
         501.3706409411209
       ],
       "flags": {},
-      "order": 7,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -847,7 +724,7 @@
         314
       ],
       "flags": {},
-      "order": 8,
+      "order": 7,
       "mode": 4,
       "inputs": [],
       "outputs": [
@@ -871,7 +748,7 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "Example_reference02_flowers.png",
+        "Example_reference01_flowers.png",
         "image"
       ],
       "color": "#223",
@@ -889,7 +766,7 @@
         314
       ],
       "flags": {},
-      "order": 9,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -932,7 +809,7 @@
         46
       ],
       "flags": {},
-      "order": 19,
+      "order": 20,
       "mode": 4,
       "inputs": [
         {
@@ -974,7 +851,7 @@
         366.2736593142304
       ],
       "flags": {},
-      "order": 10,
+      "order": 9,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -982,54 +859,6 @@
       "properties": {},
       "widgets_values": [
         "I suggest doing your own tests, each case is a bit different but here are some of my findings:\n\nSTEPS:\n\nSubtle but noticeable effect:\nStep floor: 5\nStart at Step: 16\nEnd at Step: 26\n\nMore dramatic trippy effect:\nStep floor: 5\nStart at Step: 16\nEnd at Step: 36\n\nZOOM:\n\nThis depends on the length of your cycle. With bigger cycle lengths you can do large zooms. Probably even 2 or higher \n\nBut for most cycles below 100 I find that 1.25 is a pretty nice zoom_max. You can make your zoom less than 1.00 but there's no masking setup in the node so it's just gonna be that latent brownian noise around the edges.\n\nCLAMP VALUES:\n\nIf you want a consistent value across steps just use the same min and max and it'll stay fixed"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 49,
-      "type": "Note",
-      "pos": [
-        -534.240051453194,
-        565.937431571836
-      ],
-      "size": [
-        348.566092290353,
-        340.5365321668776
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Video Iterative Sampler Advanced Settings",
-      "properties": {},
-      "widgets_values": [
-        "SEED: \nThe same seed is used across all frames of the video, even when set to randomize. This maintains temporal consistency\n\nADD_NOISE:\nUnless you are adding your own noise to your image batch you should leave this enabled\n\nNOISE_INJECTION_STRENGTH: The sampler is generating an RGB noise image with a unique seed, then vae encodes that and blends it with the latent video frame before diffusion. This value controls how much noise is added, higher value means more noise added.\n\nLOCK_INJECTION_SEED: By default the noise injection seed changes for each frame, locking it can retain more temporal consistency. I like to leave it on for most cases.\n\nFEEDBACK_MODE: When set to none it processes each frame individually. When set to \"previous_frame\" it blends the previous fame at 10% with the current frame's latent before processing. This can further smooth the transition between frames. I like to usually leave this on too."
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 50,
-      "type": "Note",
-      "pos": [
-        -1279.0160423283255,
-        199.06549086014397
-      ],
-      "size": [
-        327.9328874307985,
-        88
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "NOTE",
-      "properties": {},
-      "widgets_values": [
-        "When using redux you can leave the text prompt blank"
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -1046,7 +875,7 @@
         137.66096801950658
       ],
       "flags": {},
-      "order": 13,
+      "order": 10,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1070,7 +899,7 @@
         90.27374977196314
       ],
       "flags": {},
-      "order": 14,
+      "order": 11,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1082,55 +911,86 @@
       "bgcolor": "#653"
     },
     {
-      "id": 45,
+      "id": 52,
+      "type": "IterativeCheckpointController",
+      "pos": [
+        -527.7418080604562,
+        958.9713133385451
+      ],
+      "size": [
+        343.11288450439645,
+        130
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "checkpoint_config",
+          "type": "CHECKPOINT_CONFIG",
+          "links": [
+            64
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "IterativeCheckpointController"
+      },
+      "widgets_values": [
+        true,
+        16,
+        false,
+        ""
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 49,
       "type": "Note",
       "pos": [
-        -530.5874872936264,
-        1141.4479583680072
+        -534.240051453194,
+        565.937431571836
       ],
       "size": [
         348.566092290353,
         340.5365321668776
       ],
       "flags": {},
-      "order": 15,
+      "order": 13,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Video Checkpoint Controller",
+      "title": "Video Iterative Sampler Advanced Settings",
       "properties": {},
       "widgets_values": [
-        "When \"enable checkpointing\" is enabled, it creates and folder called \"video_checkpoints\" in comfyui/output.\n\nIt saves a PNG with workflow attached, including the seed\n\nIt also saves a checkpoint file containing all the raw latents that have already been processed\n\nTo continue from a checkpoint\n\n1. Drop the PNG into the browser to load the workflow\n\n2. If you don't see the checkpoint dropdown menu in the Video Checkpoint Conroller then refresh the page\n\n3. Select the correct checkpoint file from the drop down\n\n4. Toggle load_video_checkpoint = true \n\n5. Run the workflow\n\nThe process will pickup from your last checkpoint interval and all the parameters will still be saved.\n\nWhen the full job is finished the PNG and the Checkpoint file are automatically erased from the video_checkpoints folder"
+        "SEED: \nThe same seed is used across all frames of the video, even when set to randomize. This maintains temporal consistency\n\nADD_NOISE:\nYou should leave this enabled unless you are adding your own noise to your image batch before the sampler step.\n\nNOISE_INJECTION_STRENGTH: The sampler is generating an RGB noise image with a unique seed, then vae encodes that and blends it with the latent video frame before diffusion. This value controls how much noise is added, higher value means more noise added.\n\nLOCK_INJECTION_SEED: By default the noise injection seed changes for each frame, locking it can retain more temporal consistency. I like to leave it on for most cases.\n\nFEEDBACK_MODE: When set to none it processes each frame's raw latent. When set to \"previous_frame\" it blends the previous frame at 10% with the current frame's latent before processing. This can further smooth the transition between frames. I like to usually leave this on too."
       ],
       "color": "#432",
       "bgcolor": "#653"
     },
     {
-      "id": 44,
-      "type": "VHS_LoadVideo",
+      "id": 41,
+      "type": "ImageScaleToTotalPixels",
       "pos": [
-        -1641.2726881413525,
-        536.7636899776185
+        -1359.8694359556725,
+        536.7275321738907
       ],
       "size": [
-        247.19444274902344,
-        551.1944427490234
+        270,
+        82
       ],
       "flags": {},
-      "order": 16,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
-          "name": "meta_batch",
-          "shape": 7,
-          "type": "VHS_BatchManager",
-          "link": null
-        },
-        {
-          "name": "vae",
-          "shape": 7,
-          "type": "VAE",
-          "link": null
+          "name": "image",
+          "type": "IMAGE",
+          "link": 57
         }
       ],
       "outputs": [
@@ -1138,58 +998,192 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            57
+            50
           ]
-        },
-        {
-          "name": "frame_count",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "links": null
-        },
-        {
-          "name": "video_info",
-          "type": "VHS_VIDEOINFO",
-          "links": null
         }
       ],
       "properties": {
-        "cnr_id": "comfyui-videohelpersuite",
-        "ver": "08e8df15db24da292d4b7f943c460dc2ab442b24",
-        "Node name for S&R": "VHS_LoadVideo"
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "ImageScaleToTotalPixels"
       },
-      "widgets_values": {
-        "video": "Example_Input_02_Snake.mp4",
-        "force_rate": 12,
-        "custom_width": 0,
-        "custom_height": 0,
-        "frame_load_cap": 0,
-        "skip_first_frames": 0,
-        "select_every_nth": 1,
-        "format": "AnimateDiff",
-        "choose video to upload": "image",
-        "videopreview": {
-          "hidden": false,
-          "paused": false,
-          "params": {
-            "filename": "Example_Input_02_Snake.mp4",
-            "type": "input",
-            "format": "video/mp4",
-            "force_rate": 12,
-            "custom_width": 0,
-            "custom_height": 0,
-            "frame_load_cap": 0,
-            "skip_first_frames": 0,
-            "select_every_nth": 1
-          }
-        }
-      },
+      "widgets_values": [
+        "lanczos",
+        0.5
+      ],
       "color": "#223",
       "bgcolor": "#335"
+    },
+    {
+      "id": 54,
+      "type": "WaveController",
+      "pos": [
+        -917.7576698003718,
+        862.5748075437775
+      ],
+      "size": [
+        360,
+        226
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": [
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "WaveController"
+      },
+      "widgets_values": [
+        37,
+        5,
+        16,
+        36,
+        1,
+        1.2,
+        1,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 45,
+      "type": "Note",
+      "pos": [
+        -530.5874872936264,
+        1141.4479583680072
+      ],
+      "size": [
+        346.85028640082214,
+        386.5829406013934
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Iterative Checkpoint Controller",
+      "properties": {},
+      "widgets_values": [
+        "When \"enable checkpointing\" is enabled, it creates and folder called \"video_checkpoints\" in comfyui/output. 'checkpoint_interval' controls how many steps between saves\n\nIt saves a PNG with workflow attached, including the seed\n\nIt also saves a checkpoint file containing all the raw latents that have already been processed\n\nTo continue from a checkpoint\n\n1. Navigate to your output directory and find the \"video_checkpoints\" folder\n\n2. Drop the PNG from that folder into the browser to load the workflow\n\n3. Copy the name of the checkpoint file you want to use and paste it into the 'checkpoint_run_id' field\n\n4. Toggle load_video_checkpoint = true \n\n5. Run the workflow\n\nThe process will pickup from your last checkpoint interval and all the parameters will still be saved.\n\nWhen the full job is finished the PNG and the Checkpoint file are automatically erased from the video_checkpoints folder"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 53,
+      "type": "VideoIterativeSampler",
+      "pos": [
+        -145.2600205701266,
+        401.42292694645704
+      ],
+      "size": [
+        366.9221473481193,
+        730.9221473481193
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 70
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 69
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 68
+        },
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "link": 67
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": 66
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 65
+        },
+        {
+          "name": "checkpoint_config",
+          "shape": 7,
+          "type": "CHECKPOINT_CONFIG",
+          "link": 64
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "VideoIterativeSampler"
+      },
+      "widgets_values": [
+        473470593245071,
+        "randomize",
+        true,
+        "euler",
+        "simple",
+        1,
+        0.1,
+        false,
+        "none"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 50,
+      "type": "Note",
+      "pos": [
+        -1279.0160423283255,
+        199.06549086014397
+      ],
+      "size": [
+        342.11652653115925,
+        88
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "NOTE",
+      "properties": {},
+      "widgets_values": [
+        "When using redux you can leave the text prompt blank"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -1200,14 +1194,6 @@
       1,
       0,
       "CLIP_VISION"
-    ],
-    [
-      3,
-      23,
-      0,
-      1,
-      2,
-      "TRIANGLE_WAVE_CONFIG"
     ],
     [
       5,
@@ -1282,76 +1268,12 @@
       "VAE"
     ],
     [
-      24,
-      2,
-      0,
-      26,
-      0,
-      "MODEL"
-    ],
-    [
-      25,
-      5,
-      0,
-      26,
-      1,
-      "CONDITIONING"
-    ],
-    [
-      26,
-      10,
-      0,
-      26,
-      2,
-      "CONDITIONING"
-    ],
-    [
-      27,
-      6,
-      0,
-      26,
-      3,
-      "LATENT"
-    ],
-    [
-      28,
-      8,
-      1,
-      26,
-      4,
-      "TRIANGLE_WAVE_CONFIG"
-    ],
-    [
-      29,
-      7,
-      0,
-      26,
-      5,
-      "VAE"
-    ],
-    [
-      32,
-      26,
-      0,
-      20,
-      0,
-      "LATENT"
-    ],
-    [
       50,
       41,
       0,
       6,
       0,
       "IMAGE"
-    ],
-    [
-      51,
-      42,
-      0,
-      26,
-      6,
-      "CHECKPOINT_CONFIG"
     ],
     [
       57,
@@ -1392,6 +1314,78 @@
       2,
       0,
       "MODEL"
+    ],
+    [
+      63,
+      54,
+      0,
+      1,
+      2,
+      "TRIANGLE_WAVE_CONFIG"
+    ],
+    [
+      64,
+      52,
+      0,
+      53,
+      6,
+      "CHECKPOINT_CONFIG"
+    ],
+    [
+      65,
+      7,
+      0,
+      53,
+      5,
+      "VAE"
+    ],
+    [
+      66,
+      8,
+      1,
+      53,
+      4,
+      "TRIANGLE_WAVE_CONFIG"
+    ],
+    [
+      67,
+      6,
+      0,
+      53,
+      3,
+      "LATENT"
+    ],
+    [
+      68,
+      10,
+      0,
+      53,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      69,
+      5,
+      0,
+      53,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      70,
+      2,
+      0,
+      53,
+      0,
+      "MODEL"
+    ],
+    [
+      71,
+      53,
+      0,
+      20,
+      0,
+      "LATENT"
     ]
   ],
   "groups": [
@@ -1412,10 +1406,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6934334949441823,
+      "scale": 0.47362440744770584,
       "offset": [
-        1980.2760191419402,
-        172.06330514727435
+        2611.4568566587113,
+        847.9566529685878
       ]
     },
     "frontendVersion": "1.28.8",

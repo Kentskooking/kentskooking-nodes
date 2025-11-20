@@ -26,10 +26,12 @@ except Exception as e:
     IPADAPTER_AVAILABLE = False
     print(f"⚠ Warning: IPAdapter import failed - {type(e).__name__}: {e}")
 
+
 class VideoIterativeSampler:
     """
-    Iterative sampler for video latent sequences.
-    Processes each frame with dynamic parameters and optional frame-to-frame feedback.
+    Iterative sampler variant with placeholders for start/end step metadata.
+    Currently mirrors the baseline sampler while exposing renamed inputs so
+    future KSamplerAdvanced integration can hook into the wave configuration.
     """
 
     @classmethod
@@ -40,23 +42,23 @@ class VideoIterativeSampler:
                 "positive": ("CONDITIONING",),
                 "negative": ("CONDITIONING",),
                 "latent_batch": ("LATENT",),
-
+                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "add_noise": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
                 "scheduler": (comfy.samplers.KSampler.SCHEDULERS,),
                 "cfg": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.1}),
-
-                "base_steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
-                "base_denoise": ("FLOAT", {"default": 0.4, "min": 0.0, "max": 1.0, "step": 0.01}),
-
-                "use_dynamic_params": ("BOOLEAN", {"default": True}),
                 "noise_injection_strength": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 1.0, "step": 0.01}),
-
+                "lock_injection_seed": ("BOOLEAN", {"default": False, "label_on": "locked", "label_off": "varying"}),
                 "feedback_mode": (["none", "previous_frame"], {"default": "none"}),
             },
             "optional": {
-                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
                 "vae": ("VAE",),
+                "checkpoint_config": ("CHECKPOINT_CONFIG",),
+            },
+            "hidden": {
+                "prompt": "PROMPT",
+                "extra_pnginfo": "EXTRA_PNGINFO"
             }
         }
 
@@ -66,10 +68,6 @@ class VideoIterativeSampler:
     CATEGORY = "kentskooking/sampling"
 
     def apply_style_model(self, conditioning, style_model, clip_vision_output, strength, strength_type):
-        """
-        Apply style model to conditioning with dynamic strength.
-        Based on ComfyUI's StyleModelApply node (nodes.py:1051).
-        """
         cond = style_model.get_cond(clip_vision_output).flatten(start_dim=0, end_dim=1).unsqueeze(dim=0)
         if strength_type == "multiply":
             cond *= strength
@@ -135,9 +133,10 @@ class VideoIterativeSampler:
 
         return out[0], out[1]
 
-    def calculate_triangle_wave_values(self, frame_idx, config):
+    def calculate_wave_values(self, frame_idx, config):
         """
-        Calculate triangle wave values for current frame.
+        Calculate advanced steps/zoom/clip for the current frame.
+        Always assumes WaveController configuration.
         """
         position_in_cycle = frame_idx % config["cycle_length"]
 
@@ -149,20 +148,20 @@ class VideoIterativeSampler:
                 t = (cycle_length - position) / half_cycle
             return min_val + (max_val - min_val) * t
 
-        steps_float = triangle_wave(position_in_cycle, config["cycle_length"],
-                                   config["steps_min"], config["steps_max"])
-        steps = int(round(steps_float))
+        step_floor = max(1, config["step_floor"])
+        start_at = config["start_at_step"]
+        min_end = start_at + step_floor
+        max_end = max(min_end, config["end_at_step"])
+        current_end = triangle_wave(position_in_cycle, config["cycle_length"], min_end, max_end)
+        end_at = int(round(max(current_end, min_end)))
+        steps = max(step_floor, end_at - start_at)
 
-        denoise = triangle_wave(position_in_cycle, config["cycle_length"],
-                               config["denoise_min"], config["denoise_max"])
-
-        zoom_factor = triangle_wave(position_in_cycle, config["cycle_length"],
-                                   config["zoom_min"], config["zoom_max"])
-
+        zoom = triangle_wave(position_in_cycle, config["cycle_length"],
+                             config["zoom_min"], config["zoom_max"])
         clip_strength = triangle_wave(position_in_cycle, config["cycle_length"],
-                                     config["clip_strength_min"], config["clip_strength_max"])
+                                      config["clip_strength_min"], config["clip_strength_max"])
 
-        return steps, denoise, zoom_factor, clip_strength
+        return steps, zoom, clip_strength, start_at, end_at
 
     def calculate_ipadapter_wave_values(self, frame_idx, config):
         """
@@ -245,16 +244,31 @@ class VideoIterativeSampler:
         img_tensor = torch.from_numpy(img_np).unsqueeze(0)
         return img_tensor
 
-    def inject_noise_latent(self, latent, strength, vae=None, seed=0):
+    def generate_noise_latent(self, latent_shape, vae, seed):
+        """Generate VAE-encoded noise latent for caching."""
+        batch, channels, height, width = latent_shape
+        pixel_height = height * 8
+        pixel_width = width * 8
+
+        noise_image = self.generate_noise_image(pixel_width, pixel_height, seed, noise_level=8192)
+        noise_tensor = self.pil_to_tensor(noise_image)
+        noise_latent = vae.encode(noise_tensor[:,:,:,:3])
+        return noise_latent
+
+    def inject_noise_latent(self, latent, strength, vae=None, seed=0, cached_noise_latent=None):
         """
         Inject noise into latent tensor.
+        If cached_noise_latent is provided, uses it directly (avoids repeated VAE encodes).
         If VAE is provided, uses VAE-encoded noise (matching Mixlab + KJ workflow).
         Otherwise falls back to simple Gaussian noise.
         """
         if strength <= 0:
             return latent
 
-        if vae is not None:
+        if cached_noise_latent is not None:
+            # Use cached noise latent (avoids regeneration when seed is locked)
+            return latent + cached_noise_latent * strength
+        elif vae is not None:
             # VAE-encoded noise method (matching your external workflow)
             batch, channels, height, width = latent.shape
 
@@ -277,61 +291,170 @@ class VideoIterativeSampler:
             return latent + noise
 
     def zoom_latent(self, latent, zoom_factor):
-        """
-        Apply zoom/scale transformation to latent tensor.
-        zoom_factor > 1.0 = zoom in (crop center and scale up)
-        zoom_factor < 1.0 = zoom out (scale down and pad)
-        zoom_factor = 1.0 = no change
-        """
         if zoom_factor == 1.0:
             return latent
-
         batch, channels, height, width = latent.shape
-
         if zoom_factor > 1.0:
             new_height = int(height / zoom_factor)
             new_width = int(width / zoom_factor)
-
             top = (height - new_height) // 2
             left = (width - new_width) // 2
-
             cropped = latent[:, :, top:top+new_height, left:left+new_width]
             zoomed = F.interpolate(cropped, size=(height, width), mode='bicubic', align_corners=False)
-
         else:
             new_height = int(height * zoom_factor)
             new_width = int(width * zoom_factor)
-
             scaled = F.interpolate(latent, size=(new_height, new_width), mode='bicubic', align_corners=False)
-
             pad_top = (height - new_height) // 2
             pad_left = (width - new_width) // 2
             pad_bottom = height - new_height - pad_top
             pad_right = width - new_width - pad_left
-
             zoomed = F.pad(scaled, (pad_left, pad_right, pad_top, pad_bottom), mode='constant', value=0)
-
         return zoomed
 
-    def process_video(self, model, positive, negative, latent_batch, seed, sampler_name, scheduler, cfg,
-                      base_steps, base_denoise, use_dynamic_params, noise_injection_strength, feedback_mode,
-                      wave_config=None, vae=None):
-        """
-        Main processing function - iterates through latent batch frame by frame.
-        """
+    def save_checkpoint(self, processed_latents, frame_idx, checkpoint_dir, run_id):
+        """Save checkpoint to disk (overwrites previous checkpoint)."""
+        import comfy.utils
+        import os
+
+        try:
+            # Stack all processed latents
+            stacked_latents = torch.cat(processed_latents, dim=0)
+
+            # Prepare safetensors format (matching ComfyUI SaveLatent)
+            output = {
+                "latent_tensor": stacked_latents.contiguous(),
+                "latent_format_version_0": torch.tensor([])
+            }
+
+            # Metadata for resume info
+            metadata = {
+                "frame_count": str(len(processed_latents)),
+                "last_frame_idx": str(frame_idx),
+                "checkpoint_type": "video_iterative_sampler"
+            }
+
+            # Save checkpoint (overwrite previous)
+            checkpoint_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}.latent")
+            comfy.utils.save_torch_file(output, checkpoint_path, metadata=metadata)
+
+            return checkpoint_path
+        except Exception as e:
+            print(f"⚠ Warning: Failed to save checkpoint: {e}")
+            return None
+
+    def cleanup_checkpoint(self, checkpoint_dir, run_id):
+        """Delete checkpoint files on successful completion."""
+        import os
+
+        try:
+            # Remove checkpoint .latent file
+            checkpoint_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}.latent")
+            if os.path.exists(checkpoint_path):
+                os.remove(checkpoint_path)
+                print(f"✓ Checkpoint file removed: {checkpoint_path}")
+
+            # Remove preview PNG (no longer needed after successful completion)
+            preview_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}_preview.png")
+            if os.path.exists(preview_path):
+                os.remove(preview_path)
+                print(f"✓ Preview PNG removed: {preview_path}")
+        except Exception as e:
+            print(f"⚠ Warning: Failed to cleanup checkpoint files: {e}")
+
+    def generate_checkpoint_preview(self, latent_batch, vae, run_id, checkpoint_dir, prompt=None, extra_pnginfo=None):
+        """Generate preview PNG from first frame of input latent batch with workflow metadata."""
+        import os
+        import json
+        from PIL import Image
+        from PIL.PngImagePlugin import PngInfo
+        from datetime import datetime
+        import numpy as np
+
+        try:
+            # Extract and decode first frame
+            first_latent = latent_batch[0:1]
+            decoded = vae.decode(first_latent)
+
+            # Convert tensor to PIL Image (matches ComfyUI SaveImage logic - nodes.py:1593-1594)
+            # ComfyUI images are already in [batch, height, width, channels] format
+            image = decoded[0]  # Extract first image from batch
+            image_np = 255.0 * image.cpu().numpy()
+            image_np = np.clip(image_np, 0, 255).astype(np.uint8)
+            pil_image = Image.fromarray(image_np)
+
+            # Add metadata (checkpoint + workflow)
+            metadata = PngInfo()
+
+            # Add ComfyUI workflow metadata (for drag-and-drop restore)
+            if prompt is not None:
+                metadata.add_text("prompt", json.dumps(prompt))
+            if extra_pnginfo is not None:
+                for key in extra_pnginfo:
+                    metadata.add_text(key, json.dumps(extra_pnginfo[key]))
+
+            # Add checkpoint-specific metadata
+            metadata.add_text("checkpoint_run_id", run_id)
+            metadata.add_text("checkpoint_timestamp", datetime.now().isoformat())
+            metadata.add_text("checkpoint_preview_type", "input_latent_first_frame")
+
+            # Save preview
+            preview_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}_preview.png")
+            pil_image.save(preview_path, pnginfo=metadata, compress_level=4)
+            print(f"  ✓ Preview PNG saved: {preview_path}")
+
+        except Exception as e:
+            print(f"  ⚠ Warning: Could not generate preview PNG: {e}")
+
+    def process_video(self, model, positive, negative, latent_batch, wave_config, seed, add_noise,
+                      sampler_name, scheduler, cfg, noise_injection_strength, lock_injection_seed, feedback_mode,
+                      vae=None, checkpoint_config=None, prompt=None, extra_pnginfo=None):
         latents = latent_batch["samples"]
         num_frames = latents.shape[0]
 
+        if wave_config is None:
+            raise Exception("VideoIterativeSampler requires a wave_config input from WaveController.")
+
+        # Extract checkpoint configuration
+        checkpoint_config = checkpoint_config or {}
+        enable_checkpoint = checkpoint_config.get("checkpoint_enabled", False)
+        checkpoint_interval = checkpoint_config.get("checkpoint_interval", 16)
+        checkpoint_dir = checkpoint_config.get("checkpoint_dir", "")
+        run_id = checkpoint_config.get("checkpoint_run_id", "")
+        resume_frame = checkpoint_config.get("resume_frame", 0)
+        loaded_latents = checkpoint_config.get("loaded_latents", None)
+        checkpoint_type = checkpoint_config.get("checkpoint_type", None)
+
+        # Validate checkpoint type if resuming from a checkpoint
+        if loaded_latents is not None and checkpoint_type is not None:
+            expected_type = "video_iterative_sampler"
+            if checkpoint_type != expected_type:
+                raise ValueError(
+                    f"Checkpoint type mismatch!\n"
+                    f"This sampler expects: '{expected_type}'\n"
+                    f"But checkpoint was created by: '{checkpoint_type}'\n"
+                    f"Please use the correct sampler for this checkpoint."
+                )
+
         print(f"\n{'='*60}")
-        print(f"VideoIterativeSampler: Processing {num_frames} frames")
-        print(f"  Base steps: {base_steps}, Base denoise: {base_denoise}")
+        print(f"VideoIterativeSamplerAdvanced: Processing {num_frames} frames")
         print(f"  Noise injection: {noise_injection_strength}")
         print(f"  Feedback mode: {feedback_mode}")
-        print(f"  Dynamic params: {use_dynamic_params}")
+        print(f"  Wave cycle length: {wave_config.get('cycle_length', 'unknown')}")
+        if enable_checkpoint:
+            print(f"  Checkpointing: enabled (every {checkpoint_interval} frames)")
+            print(f"  Run ID: {run_id}")
+            if resume_frame > 0:
+                print(f"  Resuming from frame: {resume_frame}")
+            elif vae is not None:
+                # Generate preview PNG for new checkpointed runs (with workflow metadata for drag-and-drop restore)
+                self.generate_checkpoint_preview(latents, vae, run_id, checkpoint_dir, prompt, extra_pnginfo)
         print(f"{'='*60}\n")
 
-        processed_latents = []
-        previous_latent = None
+        # Initialize latent list (use loaded latents if resuming)
+        processed_latents = loaded_latents if loaded_latents else []
+        previous_latent = processed_latents[-1].clone() if processed_latents else None
+        start_frame = resume_frame
 
         style_model = None
         strength_type = "multiply"
@@ -342,75 +465,78 @@ class VideoIterativeSampler:
         controlnet_enabled = False
         controlnet_config = {}
 
-        if wave_config is not None:
-            style_model = wave_config.get("style_model")
-            strength_type = wave_config.get("style_strength_type", "multiply")
-            clip_vision_output = wave_config.get("clip_vision_output")
-            clip_sequence = wave_config.get("clip_vision_sequence") or []
+        style_model = wave_config.get("style_model")
+        strength_type = wave_config.get("style_strength_type", "multiply")
+        clip_vision_output = wave_config.get("clip_vision_output")
+        clip_sequence = wave_config.get("clip_vision_sequence") or []
 
-            # Check for IPAdapter configuration
-            ipadapter_enabled = wave_config.get("ipadapter_enabled", False) and IPADAPTER_AVAILABLE
-            if ipadapter_enabled:
-                # Extract ipadapter from wave_config
-                # IPAdapter Unified Loader outputs a dict with 'ipadapter' and 'clipvision' keys
-                ipadapter_model = wave_config.get("ipadapter_model")
-                clipvision_model = wave_config.get("ipadapter_clip_vision")
+        # Check for IPAdapter configuration
+        ipadapter_enabled = wave_config.get("ipadapter_enabled", False) and IPADAPTER_AVAILABLE
+        if ipadapter_enabled:
+            # Extract ipadapter from wave_config
+            ipadapter_model = wave_config.get("ipadapter_model")
+            clipvision_model = wave_config.get("ipadapter_clip_vision")
 
-                # Handle both unified loader format and separate inputs
-                if isinstance(ipadapter_model, dict) and "ipadapter" in ipadapter_model:
-                    # Unified loader format - extract the parts (go deeper to get the actual model)
-                    actual_ipadapter = ipadapter_model["ipadapter"]["model"]
-                    actual_clipvision = ipadapter_model["clipvision"]["model"]
-                else:
-                    # Separate inputs
-                    actual_ipadapter = ipadapter_model
-                    actual_clipvision = clipvision_model
+            if isinstance(ipadapter_model, dict) and "ipadapter" in ipadapter_model:
+                actual_ipadapter = ipadapter_model["ipadapter"]["model"]
+                actual_clipvision = ipadapter_model["clipvision"]["model"]
+            else:
+                actual_ipadapter = ipadapter_model
+                actual_clipvision = clipvision_model
 
-                ipadapter_config = {
-                    "ipadapter": actual_ipadapter,
-                    "clipvision": actual_clipvision,
-                    "image": wave_config.get("ipadapter_image"),
-                    "weight": wave_config.get("ipadapter_weight", 1.0),
-                    "weight_type": wave_config.get("ipadapter_weight_type", "linear"),
-                    "combine_embeds": wave_config.get("ipadapter_combine_embeds", "concat"),
-                    "start_at": wave_config.get("ipadapter_start_at", 0.0),
-                    "end_at": wave_config.get("ipadapter_end_at", 1.0),
-                    "embeds_scaling": wave_config.get("ipadapter_embeds_scaling", "V only"),
-                    "image_negative": wave_config.get("ipadapter_image_negative"),
-                    "attn_mask": wave_config.get("ipadapter_attn_mask"),
-                }
+            ipadapter_config = {
+                "ipadapter": actual_ipadapter,
+                "clipvision": actual_clipvision,
+                "image": wave_config.get("ipadapter_image"),
+                "weight": wave_config.get("ipadapter_weight", 1.0),
+                "weight_type": wave_config.get("ipadapter_weight_type", "linear"),
+                "combine_embeds": wave_config.get("ipadapter_combine_embeds", "concat"),
+                "start_at": wave_config.get("ipadapter_start_at", 0.0),
+                "end_at": wave_config.get("ipadapter_end_at", 1.0),
+                "embeds_scaling": wave_config.get("ipadapter_embeds_scaling", "V only"),
+                "image_negative": wave_config.get("ipadapter_image_negative"),
+                "attn_mask": wave_config.get("ipadapter_attn_mask"),
+            }
 
-            # Check for ControlNet configuration
-            controlnet_enabled = wave_config.get("controlnet_model") is not None
-            if controlnet_enabled:
-                controlnet_config = {
-                    "control_net": wave_config.get("controlnet_model"),
-                    "control_hint": wave_config.get("controlnet_hint"),
-                    "vae": wave_config.get("controlnet_vae"),
-                    "strength": 1.0,  # default, will be overridden by wave if present
-                    "start_at": 0.0,
-                    "end_at": 1.0,
-                }
+        # Check for ControlNet configuration
+        controlnet_enabled = wave_config.get("controlnet_model") is not None
+        if controlnet_enabled:
+            controlnet_config = {
+                "control_net": wave_config.get("controlnet_model"),
+                "control_hint": wave_config.get("controlnet_hint"),
+                "vae": wave_config.get("controlnet_vae"),
+                "strength": 1.0,  # default, will be overridden by wave if present
+                "start_at": 0.0,
+                "end_at": 1.0,
+            }
 
-        for frame_idx in range(num_frames):
+        # Cache noise latent when seed is locked (avoids repeated VAE encodes for all frames)
+        cached_noise_latent = None
+        if lock_injection_seed and noise_injection_strength > 0 and vae is not None:
+            noise_seed = seed + 1  # Locked seed
+            cached_noise_latent = self.generate_noise_latent(latents[0:1].shape, vae, noise_seed)
+
+        for frame_idx in range(start_frame, num_frames):
             current_latent = latents[frame_idx:frame_idx+1]
 
-            if use_dynamic_params and wave_config is not None:
-                steps, denoise, zoom, clip_strength = self.calculate_triangle_wave_values(frame_idx, wave_config)
+            steps, zoom, clip_strength, start_step, end_step = self.calculate_wave_values(frame_idx, wave_config)
+
+            # Per-frame seed for noise injection variation (small randomness)
+            # If lock_injection_seed is enabled and noise injection is active, use constant seed
+            if lock_injection_seed and noise_injection_strength > 0:
+                noise_seed = seed + 1  # Locked seed (different from sampler seed, but constant across frames)
             else:
-                steps = base_steps
-                denoise = base_denoise
-                zoom = 1.0
-                clip_strength = 1.0
+                noise_seed = seed + frame_idx  # Varying seed per frame
+            # Main sampler seed stays constant for video consistency
+            sampler_seed = seed
 
             frame_positive = positive
             frame_clip_output = clip_vision_output
             if clip_sequence:
                 seq_len = len(clip_sequence)
-                if seq_len > 0:
-                    cycle_len = max(1, wave_config.get("cycle_length", 1))
-                    cycle_index = (frame_idx // cycle_len) % seq_len
-                    frame_clip_output = clip_sequence[cycle_index]
+                cycle_len = max(1, wave_config.get("cycle_length", 1))
+                cycle_index = (frame_idx // cycle_len) % seq_len
+                frame_clip_output = clip_sequence[cycle_index]
 
             if style_model is not None and frame_clip_output is not None:
                 frame_positive = self.apply_style_model(positive, style_model, frame_clip_output,
@@ -485,12 +611,7 @@ class VideoIterativeSampler:
                     attn_mask=ipadapter_config["attn_mask"],
                 )
 
-            print(f"Frame {frame_idx+1}/{num_frames}: steps={steps}, denoise={denoise:.3f}, zoom={zoom:.3f}, clip_strength={clip_strength:.3f}")
-
-            # Per-frame seed for noise injection variation (small randomness)
-            noise_seed = seed + frame_idx
-            # Main sampler seed stays constant for video consistency
-            sampler_seed = seed
+            print(f"Frame {frame_idx+1}/{num_frames}: steps={steps}, start_step={start_step}, end_step={end_step}, zoom={zoom:.3f}, clip_strength={clip_strength:.3f}")
 
             if feedback_mode == "previous_frame" and previous_latent is not None:
                 alpha = 0.1
@@ -500,24 +621,41 @@ class VideoIterativeSampler:
                 current_latent = self.zoom_latent(current_latent, zoom)
 
             if noise_injection_strength > 0:
-                current_latent = self.inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed)
+                current_latent = self.inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed, cached_noise_latent=cached_noise_latent)
 
             latent_dict = {"samples": current_latent}
 
+            # Advanced sampling approach (matching native KSamplerAdvanced):
+            # - end_step defines the total sigma schedule length
+            # - start_step is where we begin in that schedule
+            # - last_step=10000 is a fallback (effectively ignored since it's > end_step)
+            # - sampler_seed stays constant across all frames for video consistency
+            # Example: start=20, end=40 runs steps 20-40 of a 40-step schedule (20 actual steps)
             result = nodes.common_ksampler(
-                frame_model, sampler_seed, steps, cfg, sampler_name, scheduler,
-                frame_positive, frame_negative, latent_dict, denoise=denoise
+                frame_model, sampler_seed, end_step, cfg, sampler_name, scheduler,
+                frame_positive, frame_negative, latent_dict,
+                disable_noise=(not add_noise), start_step=start_step, last_step=10000, force_full_denoise=True
             )
 
             processed_latent = result[0]["samples"]
             processed_latents.append(processed_latent)
-
             previous_latent = processed_latent.clone()
+
+            # Save checkpoint at intervals
+            if enable_checkpoint and (frame_idx + 1) % checkpoint_interval == 0:
+                checkpoint_path = self.save_checkpoint(processed_latents, frame_idx, checkpoint_dir, run_id)
+                if checkpoint_path:
+                    print(f"✓ Checkpoint saved at frame {frame_idx + 1}/{num_frames}")
 
         all_latents = torch.cat(processed_latents, dim=0)
 
         print(f"\n{'='*60}")
-        print(f"VideoIterativeSampler: Complete! Processed {num_frames} frames")
+        print(f"VideoIterativeSamplerAdvanced: Complete! Processed {num_frames} frames")
+
+        # Cleanup checkpoint on successful completion
+        if enable_checkpoint:
+            self.cleanup_checkpoint(checkpoint_dir, run_id)
+
         print(f"  Clearing VRAM cache...")
         print(f"{'='*60}\n")
 

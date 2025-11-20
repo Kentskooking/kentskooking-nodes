@@ -1,1 +1,744 @@
-{"id":"223825ad-c44b-4e82-9d0b-3cc6b2ecd8b3","revision":0,"last_node_id":24,"last_link_id":0,"nodes":[{"id":17,"type":"WaveClipVisionEncode","pos":[501.50927734375,320.4512939453125],"size":[360,98],"flags":{},"order":0,"mode":0,"inputs":[{"localized_name":"clip_vision","name":"clip_vision","type":"CLIP_VISION","link":null},{"localized_name":"image","name":"image","type":"IMAGE","link":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"crop","name":"crop","type":"COMBO","widget":{"name":"crop"},"link":null}],"outputs":[{"localized_name":"clip_vision_output","name":"clip_vision_output","type":"CLIP_VISION_OUTPUT","links":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"WaveClipVisionEncode"},"widgets_values":["center"]},{"id":15,"type":"VideoIterativeSampler","pos":[-752.8468627929688,329.66583251953125],"size":[360,374],"flags":{},"order":1,"mode":0,"inputs":[{"localized_name":"model","name":"model","type":"MODEL","link":null},{"localized_name":"positive","name":"positive","type":"CONDITIONING","link":null},{"localized_name":"negative","name":"negative","type":"CONDITIONING","link":null},{"localized_name":"latent_batch","name":"latent_batch","type":"LATENT","link":null},{"localized_name":"wave_config","name":"wave_config","shape":7,"type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"vae","name":"vae","shape":7,"type":"VAE","link":null},{"localized_name":"seed","name":"seed","type":"INT","widget":{"name":"seed"},"link":null},{"localized_name":"sampler_name","name":"sampler_name","type":"COMBO","widget":{"name":"sampler_name"},"link":null},{"localized_name":"scheduler","name":"scheduler","type":"COMBO","widget":{"name":"scheduler"},"link":null},{"localized_name":"cfg","name":"cfg","type":"FLOAT","widget":{"name":"cfg"},"link":null},{"localized_name":"base_steps","name":"base_steps","type":"INT","widget":{"name":"base_steps"},"link":null},{"localized_name":"base_denoise","name":"base_denoise","type":"FLOAT","widget":{"name":"base_denoise"},"link":null},{"localized_name":"use_dynamic_params","name":"use_dynamic_params","type":"BOOLEAN","widget":{"name":"use_dynamic_params"},"link":null},{"localized_name":"noise_injection_strength","name":"noise_injection_strength","type":"FLOAT","widget":{"name":"noise_injection_strength"},"link":null},{"localized_name":"feedback_mode","name":"feedback_mode","type":"COMBO","widget":{"name":"feedback_mode"},"link":null}],"outputs":[{"localized_name":"latent_batch","name":"latent_batch","type":"LATENT","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"VideoIterativeSampler"},"widgets_values":[0,"randomize","euler","simple",1,20,0.4,true,0.1,"none"]},{"id":16,"type":"VideoIterativeSamplerAdvanced","pos":[-758.0702514648438,789.1324462890625],"size":[360,370],"flags":{},"order":2,"mode":0,"inputs":[{"localized_name":"model","name":"model","type":"MODEL","link":null},{"localized_name":"positive","name":"positive","type":"CONDITIONING","link":null},{"localized_name":"negative","name":"negative","type":"CONDITIONING","link":null},{"localized_name":"latent_batch","name":"latent_batch","type":"LATENT","link":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"vae","name":"vae","shape":7,"type":"VAE","link":null},{"localized_name":"checkpoint_config","name":"checkpoint_config","shape":7,"type":"CHECKPOINT_CONFIG","link":null},{"localized_name":"seed","name":"seed","type":"INT","widget":{"name":"seed"},"link":null},{"localized_name":"add_noise","name":"add_noise","type":"BOOLEAN","widget":{"name":"add_noise"},"link":null},{"localized_name":"sampler_name","name":"sampler_name","type":"COMBO","widget":{"name":"sampler_name"},"link":null},{"localized_name":"scheduler","name":"scheduler","type":"COMBO","widget":{"name":"scheduler"},"link":null},{"localized_name":"cfg","name":"cfg","type":"FLOAT","widget":{"name":"cfg"},"link":null},{"localized_name":"noise_injection_strength","name":"noise_injection_strength","type":"FLOAT","widget":{"name":"noise_injection_strength"},"link":null},{"localized_name":"lock_injection_seed","name":"lock_injection_seed","type":"BOOLEAN","widget":{"name":"lock_injection_seed"},"link":null},{"localized_name":"feedback_mode","name":"feedback_mode","type":"COMBO","widget":{"name":"feedback_mode"},"link":null}],"outputs":[{"localized_name":"latent_batch","name":"latent_batch","type":"LATENT","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"VideoIterativeSamplerAdvanced"},"widgets_values":[0,"randomize",true,"euler","simple",1,0.1,"none","none"]},{"id":22,"type":"WaveStyleModelApply","pos":[894.0146484375,316.8085021972656],"size":[360,118],"flags":{},"order":5,"mode":0,"inputs":[{"localized_name":"conditioning","name":"conditioning","type":"CONDITIONING","link":null},{"localized_name":"style_model","name":"style_model","type":"STYLE_MODEL","link":null},{"localized_name":"clip_vision_output","name":"clip_vision_output","type":"CLIP_VISION_OUTPUT","link":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"strength_type","name":"strength_type","type":"COMBO","widget":{"name":"strength_type"},"link":null}],"outputs":[{"localized_name":"conditioning","name":"conditioning","type":"CONDITIONING","links":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"WaveStyleModelApply"},"widgets_values":["multiply"]},{"id":19,"type":"WaveControlNetController","pos":[503.33056640625,644.6550903320312],"size":[360,178],"flags":{},"order":6,"mode":0,"inputs":[{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"strength_min","name":"strength_min","type":"FLOAT","widget":{"name":"strength_min"},"link":null},{"localized_name":"strength_max","name":"strength_max","type":"FLOAT","widget":{"name":"strength_max"},"link":null},{"localized_name":"start_at_min","name":"start_at_min","type":"FLOAT","widget":{"name":"start_at_min"},"link":null},{"localized_name":"start_at_max","name":"start_at_max","type":"FLOAT","widget":{"name":"start_at_max"},"link":null},{"localized_name":"end_at_min","name":"end_at_min","type":"FLOAT","widget":{"name":"end_at_min"},"link":null},{"localized_name":"end_at_max","name":"end_at_max","type":"FLOAT","widget":{"name":"end_at_max"},"link":null}],"outputs":[{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"WaveControlNetController"},"widgets_values":[0.5,1,0,0,1,1]},{"id":18,"type":"WaveControlNetApply","pos":[923.1570434570312,638.2800903320312],"size":[360,126],"flags":{},"order":7,"mode":0,"inputs":[{"localized_name":"positive","name":"positive","type":"CONDITIONING","link":null},{"localized_name":"negative","name":"negative","type":"CONDITIONING","link":null},{"localized_name":"control_net","name":"control_net","type":"CONTROL_NET","link":null},{"localized_name":"image","name":"image","type":"IMAGE","link":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"vae","name":"vae","shape":7,"type":"VAE","link":null}],"outputs":[{"localized_name":"positive","name":"positive","type":"CONDITIONING","links":null},{"localized_name":"negative","name":"negative","type":"CONDITIONING","links":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"WaveControlNetApply"},"widgets_values":[]},{"id":21,"type":"WaveIPAdapterController","pos":[507.92908111473645,945.5198850707852],"size":[360,178],"flags":{},"order":11,"mode":0,"inputs":[{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"weight_min","name":"weight_min","type":"FLOAT","widget":{"name":"weight_min"},"link":null},{"localized_name":"weight_max","name":"weight_max","type":"FLOAT","widget":{"name":"weight_max"},"link":null},{"localized_name":"start_at_min","name":"start_at_min","type":"FLOAT","widget":{"name":"start_at_min"},"link":null},{"localized_name":"start_at_max","name":"start_at_max","type":"FLOAT","widget":{"name":"start_at_max"},"link":null},{"localized_name":"end_at_min","name":"end_at_min","type":"FLOAT","widget":{"name":"end_at_min"},"link":null},{"localized_name":"end_at_max","name":"end_at_max","type":"FLOAT","widget":{"name":"end_at_max"},"link":null}],"outputs":[{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"WaveIPAdapterController"},"widgets_values":[0.5,1,0,0,1,1]},{"id":20,"type":"WaveIPAdapterAdvanced","pos":[926.4754612667591,948.6202736324819],"size":[360,298],"flags":{},"order":8,"mode":0,"inputs":[{"localized_name":"model","name":"model","type":"MODEL","link":null},{"localized_name":"ipadapter","name":"ipadapter","type":"IPADAPTER","link":null},{"localized_name":"image","name":"image","type":"IMAGE","link":null},{"localized_name":"image_negative","name":"image_negative","shape":7,"type":"IMAGE","link":null},{"localized_name":"attn_mask","name":"attn_mask","shape":7,"type":"MASK","link":null},{"localized_name":"clip_vision","name":"clip_vision","shape":7,"type":"CLIP_VISION","link":null},{"localized_name":"wave_config","name":"wave_config","shape":7,"type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"weight","name":"weight","type":"FLOAT","widget":{"name":"weight"},"link":null},{"localized_name":"weight_type","name":"weight_type","type":"COMBO","widget":{"name":"weight_type"},"link":null},{"localized_name":"combine_embeds","name":"combine_embeds","type":"COMBO","widget":{"name":"combine_embeds"},"link":null},{"localized_name":"start_at","name":"start_at","type":"FLOAT","widget":{"name":"start_at"},"link":null},{"localized_name":"end_at","name":"end_at","type":"FLOAT","widget":{"name":"end_at"},"link":null},{"localized_name":"embeds_scaling","name":"embeds_scaling","type":"COMBO","widget":{"name":"embeds_scaling"},"link":null}],"outputs":[{"localized_name":"model","name":"model","type":"MODEL","links":null},{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"WaveIPAdapterAdvanced"},"widgets_values":[1,"linear","concat",0,1,"V only"]},{"id":23,"type":"WaveVisualizer","pos":[-755.0848866211779,1262.0392891588233],"size":[360,106],"flags":{},"order":9,"mode":0,"inputs":[{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","link":null},{"localized_name":"preview_frames","name":"preview_frames","type":"INT","widget":{"name":"preview_frames"},"link":null},{"localized_name":"graph_width","name":"graph_width","type":"INT","widget":{"name":"graph_width"},"link":null},{"localized_name":"graph_height","name":"graph_height","type":"INT","widget":{"name":"graph_height"},"link":null}],"outputs":[{"localized_name":"visualization","name":"visualization","type":"IMAGE","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"WaveVisualizer"},"widgets_values":[100,1024,512]},{"id":24,"type":"VideoCheckpointController","pos":[-292.43764633102245,1258.4942805262344],"size":[360,106],"flags":{},"order":10,"mode":0,"inputs":[{"localized_name":"checkpoint_run_id","name":"checkpoint_run_id","shape":7,"type":"STRING","link":null},{"localized_name":"enable_checkpointing","name":"enable_checkpointing","type":"BOOLEAN","widget":{"name":"enable_checkpointing"},"link":null},{"localized_name":"checkpoint_interval","name":"checkpoint_interval","type":"INT","widget":{"name":"checkpoint_interval"},"link":null},{"localized_name":"load_video_checkpoint","name":"load_video_checkpoint","shape":7,"type":"BOOLEAN","widget":{"name":"load_video_checkpoint"},"link":null}],"outputs":[{"localized_name":"checkpoint_config","name":"checkpoint_config","type":"CHECKPOINT_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"VideoCheckpointController"},"widgets_values":[true,16,false]},{"id":14,"type":"TriangleWaveControllerAdvanced","pos":[-298.7313769894167,787.9585510865899],"size":[360,226],"flags":{},"order":4,"mode":0,"inputs":[{"localized_name":"cycle_length","name":"cycle_length","type":"INT","widget":{"name":"cycle_length"},"link":null},{"localized_name":"step_floor","name":"step_floor","type":"INT","widget":{"name":"step_floor"},"link":null},{"localized_name":"start_at_step","name":"start_at_step","type":"INT","widget":{"name":"start_at_step"},"link":null},{"localized_name":"end_at_step","name":"end_at_step","type":"INT","widget":{"name":"end_at_step"},"link":null},{"localized_name":"zoom_min","name":"zoom_min","type":"FLOAT","widget":{"name":"zoom_min"},"link":null},{"localized_name":"zoom_max","name":"zoom_max","type":"FLOAT","widget":{"name":"zoom_max"},"link":null},{"localized_name":"clip_strength_min","name":"clip_strength_min","type":"FLOAT","widget":{"name":"clip_strength_min"},"link":null},{"localized_name":"clip_strength_max","name":"clip_strength_max","type":"FLOAT","widget":{"name":"clip_strength_max"},"link":null}],"outputs":[{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"TriangleWaveControllerAdvanced"},"widgets_values":[60,5,16,36,1,1.25,0,1]},{"id":13,"type":"TriangleWaveController","pos":[-304.1578063964844,329.1467921021321],"size":[360,250],"flags":{},"order":3,"mode":0,"inputs":[{"localized_name":"cycle_length","name":"cycle_length","type":"INT","widget":{"name":"cycle_length"},"link":null},{"localized_name":"steps_min","name":"steps_min","type":"INT","widget":{"name":"steps_min"},"link":null},{"localized_name":"steps_max","name":"steps_max","type":"INT","widget":{"name":"steps_max"},"link":null},{"localized_name":"denoise_min","name":"denoise_min","type":"FLOAT","widget":{"name":"denoise_min"},"link":null},{"localized_name":"denoise_max","name":"denoise_max","type":"FLOAT","widget":{"name":"denoise_max"},"link":null},{"localized_name":"zoom_min","name":"zoom_min","type":"FLOAT","widget":{"name":"zoom_min"},"link":null},{"localized_name":"zoom_max","name":"zoom_max","type":"FLOAT","widget":{"name":"zoom_max"},"link":null},{"localized_name":"clip_strength_min","name":"clip_strength_min","type":"FLOAT","widget":{"name":"clip_strength_min"},"link":null},{"localized_name":"clip_strength_max","name":"clip_strength_max","type":"FLOAT","widget":{"name":"clip_strength_max"},"link":null}],"outputs":[{"localized_name":"wave_config","name":"wave_config","type":"TRIANGLE_WAVE_CONFIG","links":null}],"properties":{"aux_id":"Kentskooking/kentskooking-nodes","ver":"199d6dad23ed0248bc41e9a1c68696fcbb99ba89","Node name for S&R":"TriangleWaveController"},"widgets_values":[100,16,20,0.3,0.5,1,1.25,0,1]}],"links":[],"groups":[],"config":{},"extra":{"ds":{"scale":0.7972024500000013,"offset":[1168.7523386987664,-136.82192343316078]}},"version":0.4}
+{
+  "id": "223825ad-c44b-4e82-9d0b-3cc6b2ecd8b3",
+  "revision": 0,
+  "last_node_id": 32,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 27,
+      "type": "ImageIterativeSampler",
+      "pos": [
+        -394.5512623349489,
+        -206.10656865915143
+      ],
+      "size": [
+        360,
+        370
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        },
+        {
+          "name": "checkpoint_config",
+          "shape": 7,
+          "type": "CHECKPOINT_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "ImageIterativeSampler"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        true,
+        "euler",
+        "simple",
+        1,
+        0.1,
+        false,
+        "none"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 26,
+      "type": "IterativeCheckpointController",
+      "pos": [
+        -389.99783929918186,
+        834.838027105063
+      ],
+      "size": [
+        360,
+        130
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "checkpoint_config",
+          "type": "CHECKPOINT_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "IterativeCheckpointController"
+      },
+      "widgets_values": [
+        true,
+        16,
+        false,
+        ""
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 29,
+      "type": "CheckpointPreviewLoader",
+      "pos": [
+        -389.99783929918186,
+        1034.4906777016054
+      ],
+      "size": [
+        360,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "CheckpointPreviewLoader"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 31,
+      "type": "VideoIterativeSampler",
+      "pos": [
+        -790.8040043428069,
+        -206.10656865915143
+      ],
+      "size": [
+        360,
+        370
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        },
+        {
+          "name": "checkpoint_config",
+          "shape": 7,
+          "type": "CHECKPOINT_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "VideoIterativeSampler"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        true,
+        "euler",
+        "simple",
+        1,
+        0.1,
+        false,
+        "none"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 32,
+      "type": "WaveController",
+      "pos": [
+        -788.9827092402033,
+        282.26383885276266
+      ],
+      "size": [
+        360,
+        226
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "022162726c5a41b42109302eacd05845de81262c",
+        "Node name for S&R": "WaveController"
+      },
+      "widgets_values": [
+        60,
+        5,
+        16,
+        36,
+        1,
+        1.25,
+        0,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 21,
+      "type": "WaveIPAdapterController",
+      "pos": [
+        -392.72996723234513,
+        525.4197475361641
+      ],
+      "size": [
+        360,
+        178
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveIPAdapterController"
+      },
+      "widgets_values": [
+        0.5,
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 17,
+      "type": "WaveClipVisionEncode",
+      "pos": [
+        15.567974672269814,
+        -199.73178104105898
+      ],
+      "size": [
+        360,
+        98
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clip_vision_output",
+          "type": "CLIP_VISION_OUTPUT",
+          "links": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveClipVisionEncode"
+      },
+      "widgets_values": [
+        "center"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 22,
+      "type": "WaveStyleModelApply",
+      "pos": [
+        433.11717246273963,
+        -199.73178104105898
+      ],
+      "size": [
+        360,
+        118
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "style_model",
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "name": "clip_vision_output",
+          "type": "CLIP_VISION_OUTPUT",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "links": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveStyleModelApply"
+      },
+      "widgets_values": [
+        "multiply"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 23,
+      "type": "WaveVisualizer",
+      "pos": [
+        -786.2505813070394,
+        834.838027105063
+      ],
+      "size": [
+        360,
+        106
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "visualization",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveVisualizer"
+      },
+      "widgets_values": [
+        100,
+        1024,
+        512
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 19,
+      "type": "WaveControlNetController",
+      "pos": [
+        -392.72996723234513,
+        278.7068414557382
+      ],
+      "size": [
+        360,
+        178
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveControlNetController"
+      },
+      "widgets_values": [
+        0.5,
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 18,
+      "type": "WaveControlNetApply",
+      "pos": [
+        433.11717246273963,
+        44.26821895894107
+      ],
+      "size": [
+        360,
+        126
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveControlNetApply"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 20,
+      "type": "WaveIPAdapterAdvanced",
+      "pos": [
+        433.11717246273963,
+        280.81526695561513
+      ],
+      "size": [
+        360,
+        298
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "image_negative",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "attn_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "shape": 7,
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "wave_config",
+          "type": "TRIANGLE_WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveIPAdapterAdvanced"
+      },
+      "widgets_values": [
+        1,
+        "linear",
+        "concat",
+        0,
+        1,
+        "V only"
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    }
+  ],
+  "links": [],
+  "groups": [
+    {
+      "id": 1,
+      "title": "WAVE GUIDES",
+      "bounding": [
+        -798.9827092402033,
+        205.10684145573816,
+        776.252742007858,
+        508.3129060804256
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "SAMPLERS",
+      "bounding": [
+        -800.8040043428069,
+        -279.70656865915146,
+        776.252742007858,
+        453.6
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "CHECKPOINTS AND EXTRAS",
+      "bounding": [
+        -796.2505813070394,
+        761.2380271050629,
+        776.252742007858,
+        341.25265059654237
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "INTEGRATIONS",
+      "bounding": [
+        5.56797467226982,
+        -273.33178104105895,
+        797.5491977904697,
+        862.1470479966739
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.544500000000004,
+      "offset": [
+        2154.8203146862206,
+        624.2412770183964
+      ]
+    },
+    "frontendVersion": "1.28.8",
+    "VHS_latentpreview": true,
+    "VHS_latentpreviewrate": 12,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
