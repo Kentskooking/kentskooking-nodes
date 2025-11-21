@@ -7,7 +7,6 @@ import nodes
 import random
 import numpy as np
 from ..utils.kentskooking_utils import (
-    triangle_wave,
     calculate_wave,
     generate_noise_latent,
     inject_noise_latent,

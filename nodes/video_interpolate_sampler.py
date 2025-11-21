@@ -5,6 +5,15 @@ import comfy.utils
 import comfy.model_management
 from ..utils.kentskooking_utils import calculate_wave, apply_controlnet_wrapper
 
+# Import IPAdapter classes
+try:
+    import custom_nodes.ComfyUI_IPAdapter_plus.IPAdapterPlus as IPAdapterModule
+    # We only need IPAdapterTiled as it handles the tiling logic and calls ipadapter_execute internally
+    IPAdapterTiled = IPAdapterModule.IPAdapterTiled
+    IPADAPTER_AVAILABLE = True
+except ImportError:
+    IPADAPTER_AVAILABLE = False
+
 class VideoInterpolateSampler:
     """
     Specialized sampler for morphing between two video sequences.
@@ -140,6 +149,73 @@ class VideoInterpolateSampler:
         print(f"  Total Output:      {seg1_A.shape[0] + overlap_frames + seg3_B.shape[0]} frames")
         print(f"{'='*60}\n")
 
+        # --------------------------------------------------------------------------------
+        # IPAdapter Setup
+        # --------------------------------------------------------------------------------
+        ipadapter_enabled = wave_config.get("ipadapter_enabled", False) and IPADAPTER_AVAILABLE
+        ipadapter_data = {}
+        tiled_processor = None
+        
+        if ipadapter_enabled:
+            # Initialize Tiled Processor
+            tiled_processor = IPAdapterTiled()
+            
+            # Extract Config
+            ipadapter_model = wave_config.get("ipadapter_model")
+            clipvision_model = wave_config.get("ipadapter_clip_vision")
+            
+            # Handle Dictionary Format (WaveIPAdapterAdvanced vs others)
+            if isinstance(ipadapter_model, dict) and "ipadapter" in ipadapter_model:
+                actual_ipadapter = ipadapter_model["ipadapter"]["model"]
+                actual_clipvision = ipadapter_model["clipvision"]["model"]
+            else:
+                actual_ipadapter = ipadapter_model
+                actual_clipvision = clipvision_model
+                
+            ipadapter_data = {
+                "ipadapter": actual_ipadapter,
+                "clipvision": actual_clipvision,
+                "weight": wave_config.get("ipadapter_weight", 1.0),
+                "weight_type": wave_config.get("ipadapter_weight_type", "linear"),
+                "combine_embeds": wave_config.get("ipadapter_combine_embeds", "concat"),
+                "start_at": wave_config.get("ipadapter_start_at", 0.0),
+                "end_at": wave_config.get("ipadapter_end_at", 1.0),
+                "embeds_scaling": wave_config.get("ipadapter_embeds_scaling", "V only"),
+                "image_negative": wave_config.get("ipadapter_image_negative"),
+                "attn_mask": wave_config.get("ipadapter_attn_mask"),
+            }
+
+            # Determine Image Sequences for A and B
+            seq = wave_config.get("ipadapter_image_sequence") or []
+            single_img = wave_config.get("ipadapter_image")
+
+            frames_A = []
+            frames_B = []
+            
+            if len(seq) >= 2 * overlap_frames:
+                # Tiled/Batch Mode: Exact frames provided for overlap region
+                print(f"  IPAdapter: Using individual frames for overlap (Sequence len: {len(seq)})")
+                frames_A = seq[:overlap_frames]
+                frames_B = seq[overlap_frames:2*overlap_frames]
+            elif len(seq) >= 2:
+                # Static A/B Mode: Two images provided
+                print(f"  IPAdapter: Using static images for Video A and Video B")
+                frames_A = [seq[0]] * overlap_frames
+                frames_B = [seq[1]] * overlap_frames
+            elif single_img is not None:
+                # Single Image Fallback
+                print(f"  IPAdapter: Using single image for both A and B")
+                frames_A = [single_img] * overlap_frames
+                frames_B = [single_img] * overlap_frames
+            else:
+                print("  ⚠ Warning: IPAdapter enabled but no images found. Disabling.")
+                ipadapter_enabled = False
+
+            ipadapter_data["frames_A"] = frames_A
+            ipadapter_data["frames_B"] = frames_B
+
+        # --------------------------------------------------------------------------------
+
         processed_morph_frames = []
 
         # Initialize previous latent for feedback from the last frame of Segment 1 (A)
@@ -224,8 +300,73 @@ class VideoInterpolateSampler:
                      current_positive, current_negative,
                      cn_data["control_net"], hint, strength, start_at, end_at, vae=cn_data["vae"]
                  )
+            
+            # 4. Apply IPAdapter (Crossfade A -> B)
+            current_model = model
+            if ipadapter_enabled and tiled_processor is not None:
+                # Retrieve Min/Max values (from Controller or defaults)
+                w_static = ipadapter_data["weight"]
+                w_min = wave_config.get("ipadapter_weight_min", 0.0)
+                w_max = wave_config.get("ipadapter_weight_max", w_static)
+                
+                start_static = ipadapter_data["start_at"]
+                start_min = wave_config.get("ipadapter_start_at_min", 0.0)
+                start_max = wave_config.get("ipadapter_start_at_max", start_static)
+                
+                end_static = ipadapter_data["end_at"]
+                end_min = wave_config.get("ipadapter_end_at_min", 1.0)
+                end_max = wave_config.get("ipadapter_end_at_max", end_static)
+                
+                # Calculate A (Fades OUT: Max -> Min)
+                weight_A = w_max * (1.0 - t) + w_min * t
+                start_A = start_max * (1.0 - t) + start_min * t
+                end_A = end_max * (1.0 - t) + end_min * t
+                
+                # Calculate B (Fades IN: Min -> Max)
+                weight_B = w_min * (1.0 - t) + w_max * t
+                start_B = start_min * (1.0 - t) + start_max * t
+                end_B = end_min * (1.0 - t) + end_max * t
+                
+                # Clone model to prevent stacking across iterations
+                current_model = model.clone()
+                
+                # Apply A (using Tiled logic)
+                if weight_A > 0:
+                    current_model, _, _ = tiled_processor.apply_tiled(
+                        current_model,
+                        ipadapter_data["ipadapter"],
+                        image=ipadapter_data["frames_A"][i],
+                        weight=weight_A,
+                        weight_type=ipadapter_data["weight_type"],
+                        start_at=start_A,
+                        end_at=end_A,
+                        sharpening=0.0, # Default sharpening
+                        combine_embeds=ipadapter_data["combine_embeds"],
+                        image_negative=ipadapter_data["image_negative"],
+                        attn_mask=ipadapter_data["attn_mask"],
+                        clip_vision=ipadapter_data["clipvision"],
+                        embeds_scaling=ipadapter_data["embeds_scaling"],
+                    )
+                
+                # Apply B (using Tiled logic)
+                if weight_B > 0:
+                    current_model, _, _ = tiled_processor.apply_tiled(
+                        current_model,
+                        ipadapter_data["ipadapter"],
+                        image=ipadapter_data["frames_B"][i],
+                        weight=weight_B,
+                        weight_type=ipadapter_data["weight_type"],
+                        start_at=start_B,
+                        end_at=end_B,
+                        sharpening=0.0, # Default sharpening
+                        combine_embeds=ipadapter_data["combine_embeds"],
+                        image_negative=ipadapter_data["image_negative"],
+                        attn_mask=ipadapter_data["attn_mask"],
+                        clip_vision=ipadapter_data["clipvision"],
+                        embeds_scaling=ipadapter_data["embeds_scaling"],
+                    )
 
-            # 4. Calculate Denoise (Bell Curve or Selected Wave)
+            # 5. Calculate Denoise (Bell Curve or Selected Wave)
             # Position 0..overlap. Bell curve peaks at overlap/2.
             denoise_min = wave_config.get("denoise_min", 0.1)
             denoise_max = wave_config.get("denoise_max", 0.6)
@@ -261,7 +402,7 @@ class VideoInterpolateSampler:
             # Run Sampler
             # Note: we use 'steps' as the total scheduler steps, but 'denoise' limits how much work is done.
             result = nodes.common_ksampler(
-                model, seed, steps, cfg, sampler_name, scheduler,
+                current_model, seed, steps, cfg, sampler_name, scheduler,
                 current_positive, current_negative, latent_dict,
                 denoise=denoise
             )

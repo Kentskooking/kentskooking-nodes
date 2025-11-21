@@ -1,7 +1,9 @@
+from ..utils.kentskooking_utils import calculate_wave
+
 class WaveControlNetController:
     """
-    Enriches triangle wave config with ControlNet-specific parameters.
-    Modulates ControlNet strength, start_at, and end_at based on existing cycle_length.
+    Enriches wave config with ControlNet-specific parameters.
+    Modulates ControlNet strength, start_at, and end_at based on the configured wave type and cycle length.
     """
 
     @classmethod
@@ -22,15 +24,6 @@ class WaveControlNetController:
     RETURN_NAMES = ("wave_config",)
     FUNCTION = "enrich_config"
     CATEGORY = "kentskooking/controllers"
-
-    def triangle_wave(self, position, cycle_length, min_val, max_val):
-        """Calculate triangle wave value at given position."""
-        half_cycle = cycle_length / 2.0
-        if position <= half_cycle:
-            t = position / half_cycle
-        else:
-            t = (cycle_length - position) / half_cycle
-        return min_val + (max_val - min_val) * t
 
     def enrich_config(self, wave_config, strength_min, strength_max,
                       start_at_min, start_at_max, end_at_min, end_at_max):
@@ -54,17 +47,18 @@ class WaveControlNetController:
         Calculate ControlNet parameters for a specific frame.
         Called by Video Iterative Samplers.
         """
+        wave_type = config.get("wave_type", "triangle")
         position = frame_idx % config["cycle_length"]
 
-        strength = self.triangle_wave(position, config["cycle_length"],
+        strength = calculate_wave(wave_type, position, config["cycle_length"],
                                      config["controlnet_strength_min"],
                                      config["controlnet_strength_max"])
 
-        start_at = self.triangle_wave(position, config["cycle_length"],
+        start_at = calculate_wave(wave_type, position, config["cycle_length"],
                                      config["controlnet_start_at_min"],
                                      config["controlnet_start_at_max"])
 
-        end_at = self.triangle_wave(position, config["cycle_length"],
+        end_at = calculate_wave(wave_type, position, config["cycle_length"],
                                    config["controlnet_end_at_min"],
                                    config["controlnet_end_at_max"])
 
