@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
-import safetensors.torch
 import folder_paths
+from ..utils.kentskooking_utils import resolve_checkpoint_path, load_checkpoint_tensors
 
 
 class IterativeCheckpointController:
@@ -85,61 +85,19 @@ class IterativeCheckpointController:
 
     def _load_checkpoint(self, run_id, checkpoint_dir, checkpoint_interval):
         """Load existing checkpoint and return config with resumed state."""
-        # Check if user provided a directory path or just a filename/run_id
-        directory = os.path.dirname(run_id)
-        filename = os.path.basename(run_id)
-
-        # Use provided directory or default to checkpoint_dir
-        if directory:
-            checkpoint_dir = directory
-
-        # Strip known prefixes if present
-        if filename.startswith("video_ckpt_"):
-            filename = filename[len("video_ckpt_"):]
-        elif filename.startswith("image_ckpt_"):
-            filename = filename[len("image_ckpt_"):]
-
-        # Strip ".latent" extension if present
-        if filename.endswith(".latent"):
-            filename = filename[:-len(".latent")]
-
-        # Update run_id to the clean version
-        run_id = filename
-
-        # Try to find the file with either prefix
-        video_path = os.path.join(checkpoint_dir, f"video_ckpt_{filename}.latent")
-        image_path = os.path.join(checkpoint_dir, f"image_ckpt_{filename}.latent")
-
-        if os.path.exists(video_path):
-            checkpoint_path = video_path
-        elif os.path.exists(image_path):
-            checkpoint_path = image_path
-        else:
-            raise FileNotFoundError(
-                f"Checkpoint file not found.\n"
-                f"Tried: {video_path}\n"
-                f"  and: {image_path}"
-            )
+        
+        # Resolve full path using shared utility
+        final_path, clean_run_id = resolve_checkpoint_path(run_id, checkpoint_dir)
 
         print(f"\n{'='*60}")
-        print(f"Loading checkpoint: {run_id}")
+        print(f"Loading checkpoint: {clean_run_id}")
         print(f"{'='*60}")
 
-        # Load checkpoint file using context manager to ensure file is properly closed
-        # This prevents Windows error 1224 when trying to save new checkpoints later
-        import torch
-        loaded_current_latent = None
-        with safetensors.safe_open(checkpoint_path, framework="pt", device="cpu") as f:
-            # Extract metadata
-            metadata = f.metadata() or {}
-
-            # Load tensor and clone it to ensure it's copied to memory (not memory-mapped)
-            # Without .clone(), the tensor stays memory-mapped and locks the file
-            stacked_latents = f.get_tensor("latent_tensor").clone()
-
-            # Also load current_latent if present (for ImageIterativeSampler checkpoints)
-            if "current_latent" in f.keys():
-                loaded_current_latent = f.get_tensor("current_latent").clone()
+        # Load tensors and metadata safely
+        tensors, metadata = load_checkpoint_tensors(final_path)
+        
+        stacked_latents = tensors["latent_tensor"]
+        loaded_current_latent = tensors.get("current_latent", None)
 
         # Get tensor count for fallback when metadata is missing
         latent_tensor_count = stacked_latents.shape[0]
@@ -180,7 +138,7 @@ class IterativeCheckpointController:
         return ({
             "checkpoint_enabled": True,
             "checkpoint_interval": checkpoint_interval,
-            "checkpoint_run_id": run_id,
+            "checkpoint_run_id": clean_run_id,
             "checkpoint_dir": checkpoint_dir,
             "resume_frame": resume_frame,
             "loaded_latents": loaded_latents,

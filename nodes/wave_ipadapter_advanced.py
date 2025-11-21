@@ -24,11 +24,11 @@ class WaveIPAdapterAdvanced:
                 "image_negative": ("IMAGE",),
                 "attn_mask": ("MASK",),
                 "clip_vision": ("CLIP_VISION",),
-                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
+                "wave_config": ("WAVE_CONFIG",),
             }
         }
 
-    RETURN_TYPES = ("MODEL", "TRIANGLE_WAVE_CONFIG")
+    RETURN_TYPES = ("MODEL", "WAVE_CONFIG")
     RETURN_NAMES = ("model", "wave_config")
     FUNCTION = "store_config"
     CATEGORY = "kentskooking/ipadapter"
@@ -42,7 +42,7 @@ class WaveIPAdapterAdvanced:
         Supports image batches - will cycle through images at each cycle boundary.
         """
         if wave_config is None:
-            raise Exception("WaveIPAdapterAdvanced requires a wave_config input. Connect a Triangle Wave Controller first.")
+            raise Exception("WaveIPAdapterAdvanced requires a wave_config input. Connect a Video Wave Controller first.")
 
         enriched_config = wave_config.copy()
 

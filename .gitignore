@@ -36,4 +36,8 @@ current.log
 #specific files
 comfyui_js_instructions.txt
 CLAUDE.md
-Capture.PNGCapture*.PNG
+Capture.PNG
+Capture*.PNG
+FUTUREPLANS.md
+CHANGELOG.md
+.CLAUDE.md.swp

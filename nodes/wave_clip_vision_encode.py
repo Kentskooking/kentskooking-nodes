@@ -15,11 +15,11 @@ class WaveClipVisionEncode:
                 "clip_vision": ("CLIP_VISION",),
                 "image": ("IMAGE",),
                 "crop": (["center", "none"], {"default": "center"}),
-                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
+                "wave_config": ("WAVE_CONFIG",),
             }
         }
 
-    RETURN_TYPES = ("CLIP_VISION_OUTPUT", "TRIANGLE_WAVE_CONFIG")
+    RETURN_TYPES = ("CLIP_VISION_OUTPUT", "WAVE_CONFIG")
     RETURN_NAMES = ("clip_vision_output", "wave_config")
     FUNCTION = "encode_with_wave_config"
     CATEGORY = "kentskooking/controllers"

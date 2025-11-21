@@ -1,9 +1,12 @@
 import { app } from "../../scripts/app.js";
 
 const TARGET_NODE_NAMES = new Set([
-    "WaveController",
+    "VideoWaveController",
+    "ImageWaveController",
+    "InterpolationWaveController",
     "VideoIterativeSampler",
     "ImageIterativeSampler",
+    "VideoInterpolateSampler",
     "WaveVisualizer",
     "WaveStyleModelApply",
     "WaveClipVisionEncode",
@@ -59,13 +62,13 @@ app.registerExtension({
     name: "kentskooking.nodeWidth",
     beforeRegisterNodeDef(nodeType, nodeData) {
         if (!nodeData?.name || !TARGET_NODE_NAMES.has(nodeData.name)) {
-            if (nodeData?.name === "WaveController") {
+            if (nodeData?.name === "VideoWaveController") {
                 determineDesiredWidth(nodeType);
             }
             return;
         }
 
-        if (nodeData.name === "WaveController") {
+        if (nodeData.name === "VideoWaveController") {
             determineDesiredWidth(nodeType);
         }
 
@@ -74,7 +77,7 @@ app.registerExtension({
             if (typeof originalOnNodeCreated === "function") {
                 originalOnNodeCreated.apply(this, args);
             }
-            if (nodeData.name === "WaveController" && desiredWidth === null) {
+            if (nodeData.name === "VideoWaveController" && desiredWidth === null) {
                 desiredWidth = this?.size?.[0] ?? desiredWidth;
             }
             enforceWidth(this);

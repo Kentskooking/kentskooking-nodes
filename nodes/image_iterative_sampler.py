@@ -8,6 +8,15 @@ import os
 import random
 import numpy as np
 from PIL import Image
+from ..utils.kentskooking_utils import (
+    generate_noise_latent,
+    inject_noise_latent,
+    apply_style_model_wrapper,
+    apply_controlnet_wrapper,
+    save_checkpoint_file,
+    cleanup_checkpoint_files,
+    generate_checkpoint_preview_image
+)
 
 # Import IPAdapter execute function
 try:
@@ -38,7 +47,7 @@ class ImageIterativeSampler:
                 "positive": ("CONDITIONING",),
                 "negative": ("CONDITIONING",),
                 "latent_image": ("LATENT",),
-                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
+                "wave_config": ("WAVE_CONFIG",),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "add_noise": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
@@ -49,7 +58,7 @@ class ImageIterativeSampler:
                 "feedback_mode": (["none", "previous_iteration"], {"default": "none"}),
             },
             "optional": {
-                "vae": ("VAE", {"tooltip": "Required when zoom is enabled (zoom_min != zoom_max) for pixel-space zoom processing. Optional for noise injection and checkpoint preview."}),
+                "vae": ("VAE", {"tooltip": "Required when zoom is enabled (zoom_min != zoom_max) for pixel-space zoom processing. Optional for noise injection and checkpoint preview."} ),
                 "checkpoint_config": ("CHECKPOINT_CONFIG",),
             },
             "hidden": {
@@ -63,94 +72,15 @@ class ImageIterativeSampler:
     FUNCTION = "process_image"
     CATEGORY = "kentskooking/sampling"
 
-    def apply_style_model(self, conditioning, style_model, clip_vision_output, strength, strength_type, base_cond=None):
-        # Use cached base_cond if provided, otherwise compute fresh
-        if base_cond is not None:
-            cond = base_cond.clone()
-        else:
-            cond = style_model.get_cond(clip_vision_output).flatten(start_dim=0, end_dim=1).unsqueeze(dim=0)
-
-        if strength_type == "multiply":
-            cond *= strength
-
-        # Precompute attn_bias flag and value once (not per conditioning item)
-        is_attn_bias = (strength_type == "attn_bias")
-        attn_bias = torch.log(torch.Tensor([strength if is_attn_bias else 1.0]))
-
-        n = cond.shape[1]
-        c_out = []
-        for t in conditioning:
-            (txt, keys) = t
-            keys = keys.copy()
-            if "attention_mask" in keys or (is_attn_bias and strength != 1.0):
-                mask_ref_size = keys.get("attention_mask_img_shape", (1, 1))
-                n_ref = mask_ref_size[0] * mask_ref_size[1]
-                n_txt = txt.shape[1]
-                mask = keys.get("attention_mask", None)
-                if mask is None:
-                    mask = torch.zeros(
-                        (txt.shape[0], n_txt + n_ref, n_txt + n_ref),
-                        dtype=torch.float16,
-                        device=txt.device
-                    )
-                if mask.dtype == torch.bool:
-                    mask = torch.log(mask.to(dtype=torch.float16))
-                new_mask = torch.zeros(
-                    (txt.shape[0], n_txt + n + n_ref, n_txt + n + n_ref),
-                    dtype=torch.float16,
-                    device=txt.device
-                )
-                new_mask[:, :n_txt, :n_txt] = mask[:, :n_txt, :n_txt]
-                new_mask[:, :n_txt, n_txt+n:] = mask[:, :n_txt, n_txt:]
-                new_mask[:, n_txt+n:, :n_txt] = mask[:, n_txt:, :n_txt]
-                new_mask[:, n_txt+n:, n_txt+n:] = mask[:, n_txt:, n_txt:]
-                new_mask[:, :n_txt, n_txt:n_txt+n] = attn_bias
-                new_mask[:, n_txt+n:, n_txt:n_txt+n] = attn_bias
-                keys["attention_mask"] = new_mask
-                keys["attention_mask_img_shape"] = mask_ref_size
-
-            c_out.append([torch.cat((txt, cond), dim=1), keys])
-
-        return c_out
-
-    def apply_controlnet(self, positive, negative, control_net, control_hint, strength, start_percent, end_percent, vae=None):
-        """Apply controlnet to positive and negative conditioning."""
-        if strength == 0:
-            return positive, negative
-
-        cnets = {}
-        out = []
-
-        for conditioning in [positive, negative]:
-            c = []
-            for t in conditioning:
-                d = t[1].copy()
-
-                prev_cnet = d.get('control', None)
-                if prev_cnet in cnets:
-                    c_net = cnets[prev_cnet]
-                else:
-                    c_net = control_net.copy().set_cond_hint(control_hint, strength, (start_percent, end_percent), vae=vae)
-                    c_net.set_previous_controlnet(prev_cnet)
-                    cnets[prev_cnet] = c_net
-
-                d['control'] = c_net
-                d['control_apply_to_uncond'] = False
-                n = [t[0], d]
-                c.append(n)
-            out.append(c)
-
-        return out[0], out[1]
-
     def calculate_wave_values(self, iteration_in_cycle, config, iterations_per_cycle):
         """
         Calculate zoom/clip strength for the current iteration.
         Zoom uses exponential formula (constant rate per iteration).
         Clip strength uses linear interpolation within cycle.
         """
-        # Exponential zoom: zoom_max is the per-iteration multiplier (e.g., 1.05 = 5%)
+        # Exponential zoom: zoom_rate (or zoom_max) is the per-iteration multiplier (e.g., 1.05 = 5%)
         # +1 so first iteration applies zoom (not 1.0x)
-        zoom_rate = config.get("zoom_max", 1.0)
+        zoom_rate = config.get("zoom_rate", config.get("zoom_max", 1.0))
         zoom = zoom_rate ** (iteration_in_cycle + 1)
 
         # Linear interpolation for clip strength within cycle
@@ -187,66 +117,6 @@ class ImageIterativeSampler:
         end_at = config.get("controlnet_end_at_min", 1.0) + (config.get("controlnet_end_at_max", 1.0) - config.get("controlnet_end_at_min", 1.0)) * t
 
         return strength, start_at, end_at
-
-    def generate_noise_image(self, width, height, seed, noise_level=8192):
-        """Generate noise image matching Mixlab NoiseImage node."""
-        random.seed(seed)
-
-        image = Image.new("RGB", (width, height), (255, 255, 255))
-
-        pixels = image.load()
-        for i in range(width):
-            for j in range(height):
-                noise_r = random.randint(-noise_level, noise_level)
-                noise_g = random.randint(-noise_level, noise_level)
-                noise_b = random.randint(-noise_level, noise_level)
-
-                r = max(0, min(pixels[i, j][0] + noise_r, 255))
-                g = max(0, min(pixels[i, j][1] + noise_g, 255))
-                b = max(0, min(pixels[i, j][2] + noise_b, 255))
-
-                pixels[i, j] = (r, g, b)
-
-        return image
-
-    def pil_to_tensor(self, pil_image):
-        """Convert PIL image to ComfyUI tensor format."""
-        img_np = np.array(pil_image).astype(np.float32) / 255.0
-        img_tensor = torch.from_numpy(img_np).unsqueeze(0)
-        return img_tensor
-
-    def generate_noise_latent(self, latent_shape, vae, seed):
-        """Generate VAE-encoded noise latent for caching."""
-        batch, channels, height, width = latent_shape
-        pixel_height = height * 8
-        pixel_width = width * 8
-
-        noise_image = self.generate_noise_image(pixel_width, pixel_height, seed, noise_level=8192)
-        noise_tensor = self.pil_to_tensor(noise_image)
-        noise_latent = vae.encode(noise_tensor)
-        return noise_latent
-
-    def inject_noise_latent(self, latent, strength, vae=None, seed=0, cached_noise_latent=None):
-        """Inject noise into latent tensor. Uses cached noise if provided."""
-        if strength <= 0:
-            return latent
-
-        if cached_noise_latent is not None:
-            # Use cached noise latent (avoids regeneration when seed is locked)
-            return latent + cached_noise_latent * strength
-        elif vae is not None:
-            batch, channels, height, width = latent.shape
-            pixel_height = height * 8
-            pixel_width = width * 8
-
-            noise_image = self.generate_noise_image(pixel_width, pixel_height, seed, noise_level=8192)
-            noise_tensor = self.pil_to_tensor(noise_image)
-            noise_latent = vae.encode(noise_tensor)
-
-            return latent + noise_latent * strength
-        else:
-            noise = torch.randn_like(latent) * strength
-            return latent + noise
 
     def zoom_latent_pixel_space(self, latent, zoom_factor, vae, base_pixel_image=None):
         """
@@ -300,84 +170,6 @@ class ImageIterativeSampler:
 
         return re_encoded_latent
 
-    def save_checkpoint(self, processed_iterations, cycle_input_latent, iteration_idx, total_iterations, checkpoint_dir, run_id):
-        """Save checkpoint to disk with cycle input latent state for proper resume."""
-        try:
-            # Stack all processed iterations
-            stacked_iterations = torch.cat(processed_iterations, dim=0)
-
-            # Prepare checkpoint data - save cycle_input_latent (not current_latent)
-            # This is the latent that should be used as input for the current/next cycle
-            output = {
-                "latent_tensor": stacked_iterations.contiguous(),
-                "current_latent": cycle_input_latent.contiguous(),  # Input latent for current cycle
-                "latent_format_version_0": torch.tensor([])
-            }
-
-            # Metadata for resume info
-            metadata = {
-                "iteration_count": str(len(processed_iterations)),
-                "last_iteration_idx": str(iteration_idx),
-                "total_iterations": str(total_iterations),
-                "checkpoint_type": "image_iterative_sampler"
-            }
-
-            # Save checkpoint (overwrite previous)
-            checkpoint_path = os.path.join(checkpoint_dir, f"image_ckpt_{run_id}.latent")
-            comfy.utils.save_torch_file(output, checkpoint_path, metadata=metadata)
-
-            return checkpoint_path
-        except Exception as e:
-            print(f"⚠ Warning: Failed to save checkpoint: {e}")
-            return None
-
-    def cleanup_checkpoint(self, checkpoint_dir, run_id):
-        """Delete checkpoint files on successful completion."""
-        try:
-            checkpoint_path = os.path.join(checkpoint_dir, f"image_ckpt_{run_id}.latent")
-            if os.path.exists(checkpoint_path):
-                os.remove(checkpoint_path)
-                print(f"✓ Checkpoint file removed: {checkpoint_path}")
-
-            preview_path = os.path.join(checkpoint_dir, f"image_ckpt_{run_id}_preview.png")
-            if os.path.exists(preview_path):
-                os.remove(preview_path)
-                print(f"✓ Preview PNG removed: {preview_path}")
-        except Exception as e:
-            print(f"⚠ Warning: Failed to cleanup checkpoint files: {e}")
-
-    def generate_checkpoint_preview(self, latent, vae, run_id, checkpoint_dir, prompt=None, extra_pnginfo=None):
-        """Generate preview PNG from input latent with workflow metadata."""
-        import json
-        from PIL.PngImagePlugin import PngInfo
-        from datetime import datetime
-
-        try:
-            decoded = vae.decode(latent)
-            image = decoded[0]
-            image_np = 255.0 * image.cpu().numpy()
-            image_np = np.clip(image_np, 0, 255).astype(np.uint8)
-            pil_image = Image.fromarray(image_np)
-
-            metadata = PngInfo()
-
-            if prompt is not None:
-                metadata.add_text("prompt", json.dumps(prompt))
-            if extra_pnginfo is not None:
-                for key in extra_pnginfo:
-                    metadata.add_text(key, json.dumps(extra_pnginfo[key]))
-
-            metadata.add_text("checkpoint_run_id", run_id)
-            metadata.add_text("checkpoint_timestamp", datetime.now().isoformat())
-            metadata.add_text("checkpoint_preview_type", "input_latent")
-
-            preview_path = os.path.join(checkpoint_dir, f"image_ckpt_{run_id}_preview.png")
-            pil_image.save(preview_path, pnginfo=metadata, compress_level=4)
-            print(f"  ✓ Preview PNG saved: {preview_path}")
-
-        except Exception as e:
-            print(f"  ⚠ Warning: Could not generate preview PNG: {e}")
-
     def process_image(self, model, positive, negative, latent_image, wave_config, seed, add_noise,
                       sampler_name, scheduler, cfg, noise_injection_strength, lock_injection_seed, feedback_mode,
                       vae=None, checkpoint_config=None, prompt=None, extra_pnginfo=None):
@@ -394,14 +186,14 @@ class ImageIterativeSampler:
         clip_sequence = wave_config.get("clip_vision_sequence") or []
         ipadapter_sequence = wave_config.get("ipadapter_image_sequence") or []
 
-        # If image sequences exist, use their length; otherwise fall back to cycle_length
+        # If image sequences exist, use their length; otherwise fall back to cycle_length/cycle_count
         if len(clip_sequence) > 0 or len(ipadapter_sequence) > 0:
             num_cycles = max(len(clip_sequence), len(ipadapter_sequence))
             print(f"Cycle count determined by image sequences: {num_cycles}")
         else:
-            # Fall back to cycle_length from wave controller
-            num_cycles = max(1, wave_config.get("cycle_length", 1))
-            print(f"No image sequences found. Using cycle_length as cycle count: {num_cycles}")
+            # Fall back to cycle_count (ImageController) or cycle_length (WaveController)
+            num_cycles = max(1, wave_config.get("cycle_count", wave_config.get("cycle_length", 1)))
+            print(f"No image sequences found. Using config cycle count: {num_cycles}")
 
         # Extract wave config parameters
         step_floor = max(1, wave_config.get("step_floor", 5))
@@ -409,12 +201,12 @@ class ImageIterativeSampler:
         end_at_step = wave_config.get("end_at_step", 20)
 
         # Check if zoom is enabled (linear interpolation from min to max)
-        zoom_max = wave_config.get("zoom_max", 1.0)
-        zoom_enabled = zoom_max != 1.0
+        zoom_rate = wave_config.get("zoom_rate", wave_config.get("zoom_max", 1.0))
+        zoom_enabled = zoom_rate != 1.0
 
         # Validate VAE requirement for zoom
         if zoom_enabled and vae is None:
-            raise Exception("ImageIterativeSampler requires a VAE input when zoom is enabled (zoom_max != 1.0). Please connect a VAE to enable pixel-space zoom processing.")
+            raise Exception("ImageIterativeSampler requires a VAE input when zoom is enabled. Please connect a VAE to enable pixel-space zoom processing.")
 
         # Calculate iterations per cycle
         iterations_per_cycle = (end_at_step - start_at_step) - step_floor + 1
@@ -451,18 +243,18 @@ class ImageIterativeSampler:
         print(f"  Feedback mode: {feedback_mode}")
         if zoom_enabled:
             # Calculate cumulative zoom after all iterations for display
-            cumulative_zoom = zoom_max ** total_iterations
-            print(f"  Zoom: ENABLED (exponential) - {zoom_max}x per iteration, {cumulative_zoom:.2f}x cumulative after {total_iterations} iterations")
+            cumulative_zoom = zoom_rate ** total_iterations
+            print(f"  Zoom: ENABLED (exponential) - {zoom_rate}x per iteration, {cumulative_zoom:.2f}x cumulative after {total_iterations} iterations")
         else:
-            print(f"  Zoom: disabled (zoom_max=1.0)")
+            print(f"  Zoom: disabled (zoom_rate=1.0)")
         if enable_checkpoint:
             print(f"  Checkpointing: enabled (every {checkpoint_interval} iterations)")
             print(f"  Run ID: {run_id}")
             if resume_iteration > 0:
                 print(f"  Resuming from iteration: {resume_iteration}")
             elif vae is not None:
-                self.generate_checkpoint_preview(input_latent, vae, run_id, checkpoint_dir, prompt, extra_pnginfo)
-        print(f"{'='*60}\n")
+                generate_checkpoint_preview_image(input_latent[0], vae, run_id, checkpoint_dir, prefix="image_ckpt_", prompt=prompt, extra_pnginfo=extra_pnginfo, preview_type="input_latent")
+        print(f"{ '='*60}\n")
 
         # Initialize iteration list (use loaded iterations if resuming)
         processed_iterations = loaded_iterations if loaded_iterations else []
@@ -538,7 +330,7 @@ class ImageIterativeSampler:
         cycle_noise_latent = None
         if lock_injection_seed and noise_injection_strength > 0 and vae is not None:
             noise_seed = seed + 1  # Initial cycle seed offset
-            cycle_noise_latent = self.generate_noise_latent(input_latent.shape, vae, noise_seed)
+            cycle_noise_latent = generate_noise_latent(input_latent.shape, vae, noise_seed)
 
         # Main iteration loop - process cycles
         for iteration_idx in range(start_iteration, total_iterations):
@@ -558,7 +350,7 @@ class ImageIterativeSampler:
                 # Regenerate cached noise latent for new cycle (if seed is locked)
                 if lock_injection_seed and noise_injection_strength > 0 and vae is not None:
                     noise_seed = cycle_seed + 1
-                    cycle_noise_latent = self.generate_noise_latent(cycle_input_latent.shape, vae, noise_seed)
+                    cycle_noise_latent = generate_noise_latent(cycle_input_latent.shape, vae, noise_seed)
                 print(f"\n--- Starting Cycle {cycle_idx + 1}/{num_cycles} (seed: {cycle_seed}) ---")
 
             # Calculate progressive steps for this iteration within the cycle
@@ -590,7 +382,7 @@ class ImageIterativeSampler:
                 cycle_style_cond = style_model.get_cond(iteration_clip_output).flatten(start_dim=0, end_dim=1).unsqueeze(dim=0)
 
             if style_model is not None and iteration_clip_output is not None:
-                iteration_positive = self.apply_style_model(positive, style_model, iteration_clip_output,
+                iteration_positive = apply_style_model_wrapper(positive, style_model, iteration_clip_output,
                                                             clip_strength, strength_type, base_cond=cycle_style_cond)
 
             # Apply ControlNet
@@ -610,7 +402,7 @@ class ImageIterativeSampler:
                 hint_idx = cycle_idx % batch_size
                 iteration_control_hint = control_hint_batch[hint_idx:hint_idx+1]
 
-                iteration_positive, iteration_negative = self.apply_controlnet(
+                iteration_positive, iteration_negative = apply_controlnet_wrapper(
                     iteration_positive, iteration_negative,
                     controlnet_config["control_net"],
                     iteration_control_hint,
@@ -665,7 +457,7 @@ class ImageIterativeSampler:
 
             # Apply noise injection (zoom moved to after denoising)
             if noise_injection_strength > 0:
-                current_latent = self.inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed, cached_noise_latent=cycle_noise_latent)
+                current_latent = inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed, cached_noise_latent=cycle_noise_latent)
 
             latent_dict = {"samples": current_latent}
 
@@ -682,7 +474,19 @@ class ImageIterativeSampler:
 
             # Save checkpoint at intervals (save current cycle_input_latent for resume)
             if enable_checkpoint and (iteration_idx + 1) % checkpoint_interval == 0:
-                checkpoint_path = self.save_checkpoint(processed_iterations, cycle_input_latent, iteration_idx, total_iterations, checkpoint_dir, run_id)
+                stacked = torch.cat(processed_iterations, dim=0)
+                tensors = {
+                    "latent_tensor": stacked.contiguous(),
+                    "current_latent": cycle_input_latent.contiguous()
+                }
+                metadata = {
+                    "iteration_count": str(len(processed_iterations)),
+                    "last_iteration_idx": str(iteration_idx),
+                    "total_iterations": str(total_iterations),
+                    "checkpoint_type": "image_iterative_sampler"
+                }
+                checkpoint_path = save_checkpoint_file(tensors, metadata, checkpoint_dir, run_id, prefix="image_ckpt_")
+                
                 if checkpoint_path:
                     print(f"✓ Checkpoint saved at iteration {iteration_idx + 1}/{total_iterations}")
 
@@ -693,10 +497,10 @@ class ImageIterativeSampler:
 
         # Cleanup checkpoint on successful completion
         if enable_checkpoint:
-            self.cleanup_checkpoint(checkpoint_dir, run_id)
+            cleanup_checkpoint_files(checkpoint_dir, run_id, prefix="image_ckpt_")
 
         print(f"  Clearing VRAM cache...")
-        print(f"{'='*60}\n")
+        print(f"{ '='*60}\n")
 
         # Light VRAM cleanup (don't unload all models globally)
         comfy.model_management.soft_empty_cache()

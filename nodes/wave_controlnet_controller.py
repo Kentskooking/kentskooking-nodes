@@ -8,7 +8,7 @@ class WaveControlNetController:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
+                "wave_config": ("WAVE_CONFIG",),
                 "strength_min": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 10.0, "step": 0.01}),
                 "strength_max": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
                 "start_at_min": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
@@ -18,7 +18,7 @@ class WaveControlNetController:
             }
         }
 
-    RETURN_TYPES = ("TRIANGLE_WAVE_CONFIG",)
+    RETURN_TYPES = ("WAVE_CONFIG",)
     RETURN_NAMES = ("wave_config",)
     FUNCTION = "enrich_config"
     CATEGORY = "kentskooking/controllers"

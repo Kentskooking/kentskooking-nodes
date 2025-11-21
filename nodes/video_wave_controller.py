@@ -1,4 +1,6 @@
-class WaveController:
+from ..utils.kentskooking_utils import calculate_wave
+
+class VideoWaveController:
     """
     Triangle wave controller focusing on advanced sampling ranges.
     Provides cycle-based modulation for step count, zoom, and CLIP strength
@@ -9,6 +11,7 @@ class WaveController:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "wave_type": (["triangle", "sine", "sawtooth", "square"], {"default": "triangle"}),
                 "cycle_length": ("INT", {"default": 60, "min": 1, "max": 10000, "step": 1}),
                 "step_floor": ("INT", {"default": 5, "min": 1, "max": 10000, "step": 1}),
                 "start_at_step": ("INT", {"default": 16, "min": 0, "max": 10000, "step": 1}),
@@ -20,21 +23,12 @@ class WaveController:
             }
         }
 
-    RETURN_TYPES = ("TRIANGLE_WAVE_CONFIG",)
+    RETURN_TYPES = ("WAVE_CONFIG",)
     RETURN_NAMES = ("wave_config",)
     FUNCTION = "create_config"
     CATEGORY = "kentskooking/controllers"
 
-    def triangle_wave(self, position, cycle_length, min_val, max_val):
-        """Calculate triangle wave value at given position."""
-        half_cycle = cycle_length / 2.0
-        if position <= half_cycle:
-            t = position / half_cycle
-        else:
-            t = (cycle_length - position) / half_cycle
-        return min_val + (max_val - min_val) * t
-
-    def create_config(self, cycle_length, step_floor, start_at_step, end_at_step,
+    def create_config(self, wave_type, cycle_length, step_floor, start_at_step, end_at_step,
                       zoom_min, zoom_max, clip_strength_min, clip_strength_max):
         """
         Create configuration dictionary for triangle wave parameters.
@@ -45,6 +39,7 @@ class WaveController:
             end_at_step = start_at_step + step_floor
 
         config = {
+            "wave_type": wave_type,
             "cycle_length": cycle_length,
             "step_floor": step_floor,
             "start_at_step": start_at_step,
@@ -62,27 +57,28 @@ class WaveController:
         Calculate per-frame step count and end step using a triangle wave.
         The start step stays fixed; the wave modulates the end step.
         """
+        wave_type = config.get("wave_type", "triangle")
         position = frame_idx % config["cycle_length"]
         step_floor = max(1, config["step_floor"])
         start_at = config["start_at_step"]
         max_end = max(start_at + step_floor, config["end_at_step"])
         min_end = start_at + step_floor
 
-        current_end = self.triangle_wave(position, config["cycle_length"], min_end, max_end)
+        current_end = calculate_wave(wave_type, position, config["cycle_length"], min_end, max_end)
         end_at = int(round(max(current_end, min_end)))
         steps = max(step_floor, end_at - start_at)
 
-        zoom = self.triangle_wave(position, config["cycle_length"], config["zoom_min"], config["zoom_max"])
-        clip_strength = self.triangle_wave(position, config["cycle_length"],
+        zoom = calculate_wave(wave_type, position, config["cycle_length"], config["zoom_min"], config["zoom_max"])
+        clip_strength = calculate_wave(wave_type, position, config["cycle_length"],
                                            config["clip_strength_min"], config["clip_strength_max"])
 
         return steps, start_at, end_at, zoom, clip_strength
 
 
 NODE_CLASS_MAPPINGS = {
-    "WaveController": WaveController
+    "VideoWaveController": VideoWaveController
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "WaveController": "Wave Controller"
+    "VideoWaveController": "Video Wave Controller"
 }

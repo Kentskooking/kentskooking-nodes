@@ -1,20 +1,25 @@
 import torch
 import torch.nn.functional as F
-import comfy.sample
 import comfy.samplers
 import comfy.utils
 import comfy.model_management
 import nodes
-import sys
-import os
 import random
 import numpy as np
-from PIL import Image
+from ..utils.kentskooking_utils import (
+    triangle_wave,
+    calculate_wave,
+    generate_noise_latent,
+    inject_noise_latent,
+    apply_style_model_wrapper,
+    apply_controlnet_wrapper,
+    save_checkpoint_file,
+    cleanup_checkpoint_files,
+    generate_checkpoint_preview_image
+)
 
 # Import IPAdapter execute function
-# The ComfyUI_IPAdapter_plus custom node is already loaded by ComfyUI
 try:
-    # Access the already-loaded module from custom_nodes
     import custom_nodes.ComfyUI_IPAdapter_plus.IPAdapterPlus as IPAdapterModule
     ipadapter_execute = IPAdapterModule.ipadapter_execute
     IPADAPTER_AVAILABLE = True
@@ -42,7 +47,7 @@ class VideoIterativeSampler:
                 "positive": ("CONDITIONING",),
                 "negative": ("CONDITIONING",),
                 "latent_batch": ("LATENT",),
-                "wave_config": ("TRIANGLE_WAVE_CONFIG",),
+                "wave_config": ("WAVE_CONFIG",),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "add_noise": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
@@ -67,98 +72,25 @@ class VideoIterativeSampler:
     FUNCTION = "process_video"
     CATEGORY = "kentskooking/sampling"
 
-    def apply_style_model(self, conditioning, style_model, clip_vision_output, strength, strength_type):
-        cond = style_model.get_cond(clip_vision_output).flatten(start_dim=0, end_dim=1).unsqueeze(dim=0)
-        if strength_type == "multiply":
-            cond *= strength
-
-        n = cond.shape[1]
-        c_out = []
-        for t in conditioning:
-            (txt, keys) = t
-            keys = keys.copy()
-            if "attention_mask" in keys or (strength_type == "attn_bias" and strength != 1.0):
-                attn_bias = torch.log(torch.Tensor([strength if strength_type == "attn_bias" else 1.0]))
-                mask_ref_size = keys.get("attention_mask_img_shape", (1, 1))
-                n_ref = mask_ref_size[0] * mask_ref_size[1]
-                n_txt = txt.shape[1]
-                mask = keys.get("attention_mask", None)
-                if mask is None:
-                    mask = torch.zeros((txt.shape[0], n_txt + n_ref, n_txt + n_ref), dtype=torch.float16)
-                if mask.dtype == torch.bool:
-                    mask = torch.log(mask.to(dtype=torch.float16))
-                new_mask = torch.zeros((txt.shape[0], n_txt + n + n_ref, n_txt + n + n_ref), dtype=torch.float16)
-                new_mask[:, :n_txt, :n_txt] = mask[:, :n_txt, :n_txt]
-                new_mask[:, :n_txt, n_txt+n:] = mask[:, :n_txt, n_txt:]
-                new_mask[:, n_txt+n:, :n_txt] = mask[:, n_txt:, :n_txt]
-                new_mask[:, n_txt+n:, n_txt+n:] = mask[:, n_txt:, n_txt:]
-                new_mask[:, :n_txt, n_txt:n_txt+n] = attn_bias
-                new_mask[:, n_txt+n:, n_txt:n_txt+n] = attn_bias
-                keys["attention_mask"] = new_mask.to(txt.device)
-                keys["attention_mask_img_shape"] = mask_ref_size
-
-            c_out.append([torch.cat((txt, cond), dim=1), keys])
-
-        return c_out
-
-    def apply_controlnet(self, positive, negative, control_net, control_hint, strength, start_percent, end_percent, vae=None):
-        """
-        Apply controlnet to positive and negative conditioning.
-        Based on ComfyUI's ControlNetApplyAdvanced (nodes.py:874).
-        """
-        if strength == 0:
-            return positive, negative
-
-        cnets = {}
-        out = []
-
-        for conditioning in [positive, negative]:
-            c = []
-            for t in conditioning:
-                d = t[1].copy()
-
-                prev_cnet = d.get('control', None)
-                if prev_cnet in cnets:
-                    c_net = cnets[prev_cnet]
-                else:
-                    c_net = control_net.copy().set_cond_hint(control_hint, strength, (start_percent, end_percent), vae=vae)
-                    c_net.set_previous_controlnet(prev_cnet)
-                    cnets[prev_cnet] = c_net
-
-                d['control'] = c_net
-                d['control_apply_to_uncond'] = False
-                n = [t[0], d]
-                c.append(n)
-            out.append(c)
-
-        return out[0], out[1]
-
     def calculate_wave_values(self, frame_idx, config):
         """
         Calculate advanced steps/zoom/clip for the current frame.
         Always assumes WaveController configuration.
         """
+        wave_type = config.get("wave_type", "triangle")
         position_in_cycle = frame_idx % config["cycle_length"]
-
-        def triangle_wave(position, cycle_length, min_val, max_val):
-            half_cycle = cycle_length / 2.0
-            if position <= half_cycle:
-                t = position / half_cycle
-            else:
-                t = (cycle_length - position) / half_cycle
-            return min_val + (max_val - min_val) * t
 
         step_floor = max(1, config["step_floor"])
         start_at = config["start_at_step"]
         min_end = start_at + step_floor
         max_end = max(min_end, config["end_at_step"])
-        current_end = triangle_wave(position_in_cycle, config["cycle_length"], min_end, max_end)
+        current_end = calculate_wave(wave_type, position_in_cycle, config["cycle_length"], min_end, max_end)
         end_at = int(round(max(current_end, min_end)))
         steps = max(step_floor, end_at - start_at)
 
-        zoom = triangle_wave(position_in_cycle, config["cycle_length"],
+        zoom = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                              config["zoom_min"], config["zoom_max"])
-        clip_strength = triangle_wave(position_in_cycle, config["cycle_length"],
+        clip_strength = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                                       config["clip_strength_min"], config["clip_strength_max"])
 
         return steps, zoom, clip_strength, start_at, end_at
@@ -167,21 +99,14 @@ class VideoIterativeSampler:
         """
         Calculate IPAdapter wave values for current frame.
         """
+        wave_type = config.get("wave_type", "triangle")
         position_in_cycle = frame_idx % config["cycle_length"]
 
-        def triangle_wave(position, cycle_length, min_val, max_val):
-            half_cycle = cycle_length / 2.0
-            if position <= half_cycle:
-                t = position / half_cycle
-            else:
-                t = (cycle_length - position) / half_cycle
-            return min_val + (max_val - min_val) * t
-
-        weight = triangle_wave(position_in_cycle, config["cycle_length"],
+        weight = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                               config["ipadapter_weight_min"], config["ipadapter_weight_max"])
-        start_at = triangle_wave(position_in_cycle, config["cycle_length"],
+        start_at = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                                 config["ipadapter_start_at_min"], config["ipadapter_start_at_max"])
-        end_at = triangle_wave(position_in_cycle, config["cycle_length"],
+        end_at = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                               config["ipadapter_end_at_min"], config["ipadapter_end_at_max"])
 
         return weight, start_at, end_at
@@ -190,105 +115,17 @@ class VideoIterativeSampler:
         """
         Calculate ControlNet wave values for current frame.
         """
+        wave_type = config.get("wave_type", "triangle")
         position_in_cycle = frame_idx % config["cycle_length"]
 
-        def triangle_wave(position, cycle_length, min_val, max_val):
-            half_cycle = cycle_length / 2.0
-            if position <= half_cycle:
-                t = position / half_cycle
-            else:
-                t = (cycle_length - position) / half_cycle
-            return min_val + (max_val - min_val) * t
-
-        strength = triangle_wave(position_in_cycle, config["cycle_length"],
+        strength = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                                 config["controlnet_strength_min"], config["controlnet_strength_max"])
-        start_at = triangle_wave(position_in_cycle, config["cycle_length"],
+        start_at = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                                 config["controlnet_start_at_min"], config["controlnet_start_at_max"])
-        end_at = triangle_wave(position_in_cycle, config["cycle_length"],
+        end_at = calculate_wave(wave_type, position_in_cycle, config["cycle_length"],
                               config["controlnet_end_at_min"], config["controlnet_end_at_max"])
 
         return strength, start_at, end_at
-
-    def generate_noise_image(self, width, height, seed, noise_level=8192):
-        """
-        Generate noise image matching Mixlab NoiseImage node.
-        Creates white base with uniform random noise per channel.
-        """
-        random.seed(seed)
-
-        # Create white base image (255, 255, 255)
-        image = Image.new("RGB", (width, height), (255, 255, 255))
-
-        pixels = image.load()
-        for i in range(width):
-            for j in range(height):
-                # Random noise per channel using uniform distribution
-                noise_r = random.randint(-noise_level, noise_level)
-                noise_g = random.randint(-noise_level, noise_level)
-                noise_b = random.randint(-noise_level, noise_level)
-
-                # Add noise to pixel and clamp to 0-255
-                r = max(0, min(pixels[i, j][0] + noise_r, 255))
-                g = max(0, min(pixels[i, j][1] + noise_g, 255))
-                b = max(0, min(pixels[i, j][2] + noise_b, 255))
-
-                pixels[i, j] = (r, g, b)
-
-        return image
-
-    def pil_to_tensor(self, pil_image):
-        """Convert PIL image to ComfyUI tensor format."""
-        # Convert PIL image to numpy array
-        img_np = np.array(pil_image).astype(np.float32) / 255.0
-        # Convert to tensor and add batch dimension: [H, W, C] -> [1, H, W, C]
-        img_tensor = torch.from_numpy(img_np).unsqueeze(0)
-        return img_tensor
-
-    def generate_noise_latent(self, latent_shape, vae, seed):
-        """Generate VAE-encoded noise latent for caching."""
-        batch, channels, height, width = latent_shape
-        pixel_height = height * 8
-        pixel_width = width * 8
-
-        noise_image = self.generate_noise_image(pixel_width, pixel_height, seed, noise_level=8192)
-        noise_tensor = self.pil_to_tensor(noise_image)
-        noise_latent = vae.encode(noise_tensor[:,:,:,:3])
-        return noise_latent
-
-    def inject_noise_latent(self, latent, strength, vae=None, seed=0, cached_noise_latent=None):
-        """
-        Inject noise into latent tensor.
-        If cached_noise_latent is provided, uses it directly (avoids repeated VAE encodes).
-        If VAE is provided, uses VAE-encoded noise (matching Mixlab + KJ workflow).
-        Otherwise falls back to simple Gaussian noise.
-        """
-        if strength <= 0:
-            return latent
-
-        if cached_noise_latent is not None:
-            # Use cached noise latent (avoids regeneration when seed is locked)
-            return latent + cached_noise_latent * strength
-        elif vae is not None:
-            # VAE-encoded noise method (matching your external workflow)
-            batch, channels, height, width = latent.shape
-
-            # Generate noise image in pixel space (matching Mixlab NoiseImage)
-            # Scale latent dimensions to pixel space (typically 8x for SD models)
-            pixel_height = height * 8
-            pixel_width = width * 8
-
-            noise_image = self.generate_noise_image(pixel_width, pixel_height, seed, noise_level=8192)
-            noise_tensor = self.pil_to_tensor(noise_image)
-
-            # VAE encode the noise image
-            noise_latent = vae.encode(noise_tensor[:,:,:,:3])  # Ensure RGB channels only
-
-            # Blend: clean_latent + noise_latent * strength
-            return latent + noise_latent * strength
-        else:
-            # Fallback: simple Gaussian noise
-            noise = torch.randn_like(latent) * strength
-            return latent + noise
 
     def zoom_latent(self, latent, zoom_factor):
         if zoom_factor == 1.0:
@@ -311,100 +148,6 @@ class VideoIterativeSampler:
             pad_right = width - new_width - pad_left
             zoomed = F.pad(scaled, (pad_left, pad_right, pad_top, pad_bottom), mode='constant', value=0)
         return zoomed
-
-    def save_checkpoint(self, processed_latents, frame_idx, checkpoint_dir, run_id):
-        """Save checkpoint to disk (overwrites previous checkpoint)."""
-        import comfy.utils
-        import os
-
-        try:
-            # Stack all processed latents
-            stacked_latents = torch.cat(processed_latents, dim=0)
-
-            # Prepare safetensors format (matching ComfyUI SaveLatent)
-            output = {
-                "latent_tensor": stacked_latents.contiguous(),
-                "latent_format_version_0": torch.tensor([])
-            }
-
-            # Metadata for resume info
-            metadata = {
-                "frame_count": str(len(processed_latents)),
-                "last_frame_idx": str(frame_idx),
-                "checkpoint_type": "video_iterative_sampler"
-            }
-
-            # Save checkpoint (overwrite previous)
-            checkpoint_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}.latent")
-            comfy.utils.save_torch_file(output, checkpoint_path, metadata=metadata)
-
-            return checkpoint_path
-        except Exception as e:
-            print(f"⚠ Warning: Failed to save checkpoint: {e}")
-            return None
-
-    def cleanup_checkpoint(self, checkpoint_dir, run_id):
-        """Delete checkpoint files on successful completion."""
-        import os
-
-        try:
-            # Remove checkpoint .latent file
-            checkpoint_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}.latent")
-            if os.path.exists(checkpoint_path):
-                os.remove(checkpoint_path)
-                print(f"✓ Checkpoint file removed: {checkpoint_path}")
-
-            # Remove preview PNG (no longer needed after successful completion)
-            preview_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}_preview.png")
-            if os.path.exists(preview_path):
-                os.remove(preview_path)
-                print(f"✓ Preview PNG removed: {preview_path}")
-        except Exception as e:
-            print(f"⚠ Warning: Failed to cleanup checkpoint files: {e}")
-
-    def generate_checkpoint_preview(self, latent_batch, vae, run_id, checkpoint_dir, prompt=None, extra_pnginfo=None):
-        """Generate preview PNG from first frame of input latent batch with workflow metadata."""
-        import os
-        import json
-        from PIL import Image
-        from PIL.PngImagePlugin import PngInfo
-        from datetime import datetime
-        import numpy as np
-
-        try:
-            # Extract and decode first frame
-            first_latent = latent_batch[0:1]
-            decoded = vae.decode(first_latent)
-
-            # Convert tensor to PIL Image (matches ComfyUI SaveImage logic - nodes.py:1593-1594)
-            # ComfyUI images are already in [batch, height, width, channels] format
-            image = decoded[0]  # Extract first image from batch
-            image_np = 255.0 * image.cpu().numpy()
-            image_np = np.clip(image_np, 0, 255).astype(np.uint8)
-            pil_image = Image.fromarray(image_np)
-
-            # Add metadata (checkpoint + workflow)
-            metadata = PngInfo()
-
-            # Add ComfyUI workflow metadata (for drag-and-drop restore)
-            if prompt is not None:
-                metadata.add_text("prompt", json.dumps(prompt))
-            if extra_pnginfo is not None:
-                for key in extra_pnginfo:
-                    metadata.add_text(key, json.dumps(extra_pnginfo[key]))
-
-            # Add checkpoint-specific metadata
-            metadata.add_text("checkpoint_run_id", run_id)
-            metadata.add_text("checkpoint_timestamp", datetime.now().isoformat())
-            metadata.add_text("checkpoint_preview_type", "input_latent_first_frame")
-
-            # Save preview
-            preview_path = os.path.join(checkpoint_dir, f"video_ckpt_{run_id}_preview.png")
-            pil_image.save(preview_path, pnginfo=metadata, compress_level=4)
-            print(f"  ✓ Preview PNG saved: {preview_path}")
-
-        except Exception as e:
-            print(f"  ⚠ Warning: Could not generate preview PNG: {e}")
 
     def process_video(self, model, positive, negative, latent_batch, wave_config, seed, add_noise,
                       sampler_name, scheduler, cfg, noise_injection_strength, lock_injection_seed, feedback_mode,
@@ -448,7 +191,7 @@ class VideoIterativeSampler:
                 print(f"  Resuming from frame: {resume_frame}")
             elif vae is not None:
                 # Generate preview PNG for new checkpointed runs (with workflow metadata for drag-and-drop restore)
-                self.generate_checkpoint_preview(latents, vae, run_id, checkpoint_dir, prompt, extra_pnginfo)
+                generate_checkpoint_preview_image(latents[0], vae, run_id, checkpoint_dir, prompt=prompt, extra_pnginfo=extra_pnginfo, preview_type="input_latent_first_frame")
         print(f"{'='*60}\n")
 
         # Initialize latent list (use loaded latents if resuming)
@@ -514,7 +257,7 @@ class VideoIterativeSampler:
         cached_noise_latent = None
         if lock_injection_seed and noise_injection_strength > 0 and vae is not None:
             noise_seed = seed + 1  # Locked seed
-            cached_noise_latent = self.generate_noise_latent(latents[0:1].shape, vae, noise_seed)
+            cached_noise_latent = generate_noise_latent(latents[0:1].shape, vae, noise_seed)
 
         for frame_idx in range(start_frame, num_frames):
             current_latent = latents[frame_idx:frame_idx+1]
@@ -539,7 +282,7 @@ class VideoIterativeSampler:
                 frame_clip_output = clip_sequence[cycle_index]
 
             if style_model is not None and frame_clip_output is not None:
-                frame_positive = self.apply_style_model(positive, style_model, frame_clip_output,
+                frame_positive = apply_style_model_wrapper(positive, style_model, frame_clip_output,
                                                         clip_strength, strength_type)
 
             # Apply ControlNet per-frame with dynamic wave parameters
@@ -563,7 +306,7 @@ class VideoIterativeSampler:
                 frame_control_hint = control_hint_batch[hint_idx:hint_idx+1]
 
                 # Apply controlnet to both positive and negative conditioning
-                frame_positive, frame_negative = self.apply_controlnet(
+                frame_positive, frame_negative = apply_controlnet_wrapper(
                     frame_positive, frame_negative,
                     controlnet_config["control_net"],
                     frame_control_hint,
@@ -621,7 +364,7 @@ class VideoIterativeSampler:
                 current_latent = self.zoom_latent(current_latent, zoom)
 
             if noise_injection_strength > 0:
-                current_latent = self.inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed, cached_noise_latent=cached_noise_latent)
+                current_latent = inject_noise_latent(current_latent, noise_injection_strength, vae=vae, seed=noise_seed, cached_noise_latent=cached_noise_latent)
 
             latent_dict = {"samples": current_latent}
 
@@ -643,7 +386,15 @@ class VideoIterativeSampler:
 
             # Save checkpoint at intervals
             if enable_checkpoint and (frame_idx + 1) % checkpoint_interval == 0:
-                checkpoint_path = self.save_checkpoint(processed_latents, frame_idx, checkpoint_dir, run_id)
+                stacked = torch.cat(processed_latents, dim=0)
+                tensors = {"latent_tensor": stacked.contiguous()}
+                metadata = {
+                   "frame_count": str(len(processed_latents)),
+                   "last_frame_idx": str(frame_idx),
+                   "checkpoint_type": "video_iterative_sampler"
+                }
+                checkpoint_path = save_checkpoint_file(tensors, metadata, checkpoint_dir, run_id)
+                
                 if checkpoint_path:
                     print(f"✓ Checkpoint saved at frame {frame_idx + 1}/{num_frames}")
 
@@ -654,7 +405,7 @@ class VideoIterativeSampler:
 
         # Cleanup checkpoint on successful completion
         if enable_checkpoint:
-            self.cleanup_checkpoint(checkpoint_dir, run_id)
+            cleanup_checkpoint_files(checkpoint_dir, run_id)
 
         print(f"  Clearing VRAM cache...")
         print(f"{'='*60}\n")
