@@ -1,0 +1,2037 @@
+{
+  "id": "06381d7b-6c34-4427-a6d5-a0f8392ef2a3",
+  "revision": 0,
+  "last_node_id": 114,
+  "last_link_id": 286,
+  "nodes": [
+    {
+      "id": 73,
+      "type": "FILM VFI",
+      "pos": [
+        2174.9177344489103,
+        1066.524373834967
+      ],
+      "size": [
+        315.8611145019531,
+        126
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "frames",
+          "type": "IMAGE",
+          "link": 151
+        },
+        {
+          "name": "optional_interpolation_states",
+          "shape": 7,
+          "type": "INTERPOLATION_STATES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            152
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-frame-interpolation",
+        "ver": "1.0.7",
+        "Node name for S&R": "FILM VFI"
+      },
+      "widgets_values": [
+        "film_net_fp32.pt",
+        10,
+        2
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 86,
+      "type": "WaveIPAdapterController",
+      "pos": [
+        1780.012275609614,
+        402.14633639837126
+      ],
+      "size": [
+        360,
+        178
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": 190
+        }
+      ],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            210
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "8aac952aa18cf764b71785979245d3a8d552e729",
+        "Node name for S&R": "WaveIPAdapterController"
+      },
+      "widgets_values": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 31,
+      "type": "VAEEncode",
+      "pos": [
+        670.4169443551149,
+        965.3494077309404
+      ],
+      "size": [
+        236.24667462955108,
+        46
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 47
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            262
+          ]
+        }
+      ],
+      "title": "VAE Encode (Video A)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": [],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 32,
+      "type": "VAEEncode",
+      "pos": [
+        676.8271924235364,
+        1091.1364306802036
+      ],
+      "size": [
+        229.96976154492108,
+        46
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 49
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            263
+          ]
+        }
+      ],
+      "title": "VAE Encode (Video B)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": [],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 65,
+      "type": "WaveControlNetController",
+      "pos": [
+        849.469556835634,
+        195.20225796176658
+      ],
+      "size": [
+        360,
+        178
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": 117
+        }
+      ],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            118
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "WaveControlNetController"
+      },
+      "widgets_values": [
+        0.5,
+        0.75,
+        0,
+        0,
+        0.5,
+        0.8
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 90,
+      "type": "IPAdapterUnifiedLoader",
+      "pos": [
+        1767.9715522499816,
+        -114.07467576972901
+      ],
+      "size": [
+        270,
+        78
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 278
+        },
+        {
+          "name": "ipadapter",
+          "shape": 7,
+          "type": "IPADAPTER",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            207
+          ]
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "links": [
+            206,
+            215
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_ipadapter_plus",
+        "ver": "a0f451a5113cf9becb0847b92884cb10cbdec0ef",
+        "Node name for S&R": "IPAdapterUnifiedLoader"
+      },
+      "widgets_values": [
+        "PLUS (high strength)"
+      ],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 99,
+      "type": "PreviewImage",
+      "pos": [
+        253.75853044130758,
+        1554.2406490591447
+      ],
+      "size": [
+        440.76655040878245,
+        258
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 250
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 102,
+      "type": "VideoInterpolateSampler",
+      "pos": [
+        1142.466365909125,
+        895.0668769945958
+      ],
+      "size": [
+        360,
+        696
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 258
+        },
+        {
+          "name": "positive_A",
+          "type": "CONDITIONING",
+          "link": 259
+        },
+        {
+          "name": "positive_B",
+          "type": "CONDITIONING",
+          "link": 260
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 261
+        },
+        {
+          "name": "latents_A",
+          "type": "LATENT",
+          "link": 262
+        },
+        {
+          "name": "latents_B",
+          "type": "LATENT",
+          "link": 263
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": 275
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 265
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "links": [
+            266,
+            267
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "f4404010fbf6daaba126fcf2198d0b688470f336",
+        "Node name for S&R": "VideoInterpolateSampler"
+      },
+      "widgets_values": [
+        1074769677273563,
+        "randomize",
+        20,
+        "euler",
+        "normal",
+        8,
+        "previous_frame"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 75,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        2550.5902563752784,
+        893.9982380359065
+      ],
+      "size": [
+        351.66404837058235,
+        679.6640483705823
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 152
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-videohelpersuite",
+        "ver": "08e8df15db24da292d4b7f943c460dc2ab442b24",
+        "Node name for S&R": "VHS_VideoCombine"
+      },
+      "widgets_values": {
+        "frame_rate": 24,
+        "loop_count": 0,
+        "filename_prefix": "VFI",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "vfi_00029.mp4",
+            "subfolder": "251120",
+            "type": "output",
+            "format": "video/h264-mp4",
+            "frame_rate": 48,
+            "workflow": "vfi_00029.png",
+            "fullpath": "C:\\ComfyUI\\output\\251120\\vfi_00029.mp4"
+          }
+        }
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 17,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        1592.1026208452054,
+        893.4021797267616
+      ],
+      "size": [
+        351.66404837058235,
+        679.6640483705823
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "LATENT",
+          "link": 266
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-videohelpersuite",
+        "ver": "08e8df15db24da292d4b7f943c460dc2ab442b24",
+        "Node name for S&R": "VHS_VideoCombine"
+      },
+      "widgets_values": {
+        "frame_rate": 12,
+        "loop_count": 0,
+        "filename_prefix": "videointerpolation",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "videointerpolation_00001.mp4",
+            "subfolder": "",
+            "type": "output",
+            "format": "video/h264-mp4",
+            "frame_rate": 12,
+            "workflow": "videointerpolation_00001.png",
+            "fullpath": "C:\\ComfyUI\\output\\videointerpolation_00001.mp4"
+          }
+        }
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        317.74039563037957,
+        -204.3824933094048
+      ],
+      "size": [
+        361.53744180265835,
+        88
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            277
+          ]
+        }
+      ],
+      "title": "VideoA - CLIP Text Encode (Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 19,
+      "type": "CLIPTextEncode",
+      "pos": [
+        319.1794459293942,
+        -17.76195581396387
+      ],
+      "size": [
+        362.32348472376134,
+        88
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 50
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            276
+          ]
+        }
+      ],
+      "title": "VideoB - CLIP Text Encode (Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 64,
+      "type": "WaveControlNetApply",
+      "pos": [
+        846.2595264508917,
+        2.7745404968385783
+      ],
+      "size": [
+        360,
+        126
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 277
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 102
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 103
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 272
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": 118
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 104
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            259
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            108
+          ]
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            119
+          ]
+        }
+      ],
+      "title": "Wave ControlNet Apply - Video A",
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "WaveControlNetApply"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 62,
+      "type": "WaveControlNetApply",
+      "pos": [
+        1267.5017877096789,
+        2.9301265668513423
+      ],
+      "size": [
+        360,
+        126
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 276
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 108
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 115
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 273
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": 119
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 113
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            260
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            261
+          ]
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            190
+          ]
+        }
+      ],
+      "title": "Wave ControlNet Apply -Video B",
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "WaveControlNetApply"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 26,
+      "type": "InterpolationWaveController",
+      "pos": [
+        -148.87012349785502,
+        369.996581571551
+      ],
+      "size": [
+        360,
+        130
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            117
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "InterpolationWaveController"
+      },
+      "widgets_values": [
+        "bell_curve",
+        32,
+        0,
+        0.8
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 40,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        -139.62577212807912,
+        1335.943319195405
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 154
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            47,
+            213,
+            272
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "ImageScaleToTotalPixels"
+      },
+      "widgets_values": [
+        "lanczos",
+        0.25
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 39,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        242.26403616749263,
+        1340.5301579627724
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 153
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            49,
+            214,
+            273
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "ImageScaleToTotalPixels"
+      },
+      "widgets_values": [
+        "lanczos",
+        0.25
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 104,
+      "type": "Note",
+      "pos": [
+        1270.1340659604537,
+        203.31422381822006
+      ],
+      "size": [
+        336.78251289513105,
+        168.17279884826507
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "ControlNet Interpolation",
+      "properties": {},
+      "widgets_values": [
+        "All frames from each video are loaded into the controlnet, set your parameters with the Wave ControlNet Controller.\n\nThe sampler will use those settings to smoothly interpolate between both sets of controlnet influence.\n\nHere I'm using the animatediff controlnet which works the same with still images"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 103,
+      "type": "Note",
+      "pos": [
+        -531.2259791639656,
+        372.08123265249776
+      ],
+      "size": [
+        333.11580201924994,
+        203.84003426846675
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Basic Instructions",
+      "properties": {},
+      "widgets_values": [
+        "Upload the two videos you want to connect (Video A and Video B)\n\nSelect your 'overlap_frames' - The end of Video A will be blended with the beginning of Video B\n\nThe frames that fall outside of your overlap range will not be affected.\n\nYou can use videos of different durations but you do need to resize them to the same width and height\n\nUse the controlnet to further guide the transition and optionally use IP Adapter to reference the embeds from each frame and blend them automatically"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 74,
+      "type": "VAEDecode",
+      "pos": [
+        2199.70781898366,
+        1253.240809111736
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 267
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 149
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            151
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 100,
+      "type": "WaveVisualizer",
+      "pos": [
+        -139.38212036519587,
+        1555.2263630997845
+      ],
+      "size": [
+        360,
+        106
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": 274
+        }
+      ],
+      "outputs": [
+        {
+          "name": "visualization",
+          "type": "IMAGE",
+          "links": [
+            250
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "WaveVisualizer"
+      },
+      "widgets_values": [
+        1200,
+        600,
+        "all"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 37,
+      "type": "VHS_LoadVideo",
+      "pos": [
+        -153.71825064458233,
+        689.4008349362964
+      ],
+      "size": [
+        293.3489685058594,
+        597.3489685058594
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            154
+          ]
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "video_info",
+          "type": "VHS_VIDEOINFO",
+          "links": null
+        }
+      ],
+      "title": "Load Video (Upload)  VIDEO A",
+      "properties": {
+        "cnr_id": "comfyui-videohelpersuite",
+        "ver": "08e8df15db24da292d4b7f943c460dc2ab442b24",
+        "Node name for S&R": "VHS_LoadVideo"
+      },
+      "widgets_values": {
+        "video": "Example_input_walk_A.mp4",
+        "force_rate": 0,
+        "custom_width": 0,
+        "custom_height": 0,
+        "frame_load_cap": 0,
+        "skip_first_frames": 0,
+        "select_every_nth": 1,
+        "format": "None",
+        "choose video to upload": "image",
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "force_rate": 0,
+            "frame_load_cap": 0,
+            "skip_first_frames": 0,
+            "select_every_nth": 1,
+            "filename": "Example_input_walk_A.mp4",
+            "type": "input",
+            "format": "video/mp4"
+          },
+          "muted": false
+        }
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 20,
+      "type": "VHS_LoadVideo",
+      "pos": [
+        235.72784108180088,
+        687.4539998352706
+      ],
+      "size": [
+        293.3489685058594,
+        597.3489685058594
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            153
+          ]
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "video_info",
+          "type": "VHS_VIDEOINFO",
+          "links": null
+        }
+      ],
+      "title": "Load Video (Upload)  VIDEO B",
+      "properties": {
+        "cnr_id": "comfyui-videohelpersuite",
+        "ver": "08e8df15db24da292d4b7f943c460dc2ab442b24",
+        "Node name for S&R": "VHS_LoadVideo"
+      },
+      "widgets_values": {
+        "video": "Example_input_walk_B.mp4",
+        "force_rate": 0,
+        "custom_width": 0,
+        "custom_height": 0,
+        "frame_load_cap": 0,
+        "skip_first_frames": 0,
+        "select_every_nth": 1,
+        "format": "AnimateDiff",
+        "choose video to upload": "image",
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "force_rate": 0,
+            "frame_load_cap": 0,
+            "skip_first_frames": 0,
+            "select_every_nth": 1,
+            "filename": "Example_input_walk_B.mp4",
+            "type": "input",
+            "format": "video/mp4"
+          },
+          "muted": false
+        }
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 91,
+      "type": "WaveIPAdapterAdvanced",
+      "pos": [
+        1771.1434355157514,
+        20.050641555366838
+      ],
+      "size": [
+        360,
+        298
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 207
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "link": 206
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 213
+        },
+        {
+          "name": "image_negative",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "attn_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "shape": 7,
+          "type": "WAVE_CONFIG",
+          "link": 210
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            208
+          ]
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            211
+          ]
+        }
+      ],
+      "title": "Wave IPAdapter Advanced - Video A",
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "8aac952aa18cf764b71785979245d3a8d552e729",
+        "Node name for S&R": "WaveIPAdapterAdvanced"
+      },
+      "widgets_values": [
+        1,
+        "linear",
+        "average",
+        0,
+        1,
+        "V only"
+      ],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 92,
+      "type": "WaveIPAdapterAdvanced",
+      "pos": [
+        2164.2676191964233,
+        20.806257643586722
+      ],
+      "size": [
+        360,
+        298
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 208
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "link": 215
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 214
+        },
+        {
+          "name": "image_negative",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "attn_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "shape": 7,
+          "type": "WAVE_CONFIG",
+          "link": 211
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            258
+          ]
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            274,
+            275
+          ]
+        }
+      ],
+      "title": "Wave IPAdapter Advanced - Video B",
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "8aac952aa18cf764b71785979245d3a8d552e729",
+        "Node name for S&R": "WaveIPAdapterAdvanced"
+      },
+      "widgets_values": [
+        1,
+        "linear",
+        "average",
+        0,
+        1,
+        "V only"
+      ],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        -131.41955086489304,
+        8.566917508135635
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            278
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 1,
+          "links": [
+            3,
+            5,
+            50
+          ]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 2,
+          "links": [
+            16,
+            40,
+            41,
+            104,
+            113,
+            149,
+            265
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "models": [
+          {
+            "name": "v1-5-pruned-emaonly-fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive/resolve/main/v1-5-pruned-emaonly-fp16.safetensors?download=true",
+            "directory": "checkpoints"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wildcardxXL_v4Rundiffusion.safetensors"
+      ],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 21,
+      "type": "ControlNetLoader",
+      "pos": [
+        860.0353636293132,
+        -121.40217325296267
+      ],
+      "size": [
+        293.433349609375,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            103,
+            115
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "diffusion_pytorch_model_SDXL_UNION_promax.safetensors"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        317.1168334870506,
+        195.97182928376975
+      ],
+      "size": [
+        370.2583687922163,
+        88
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            102
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "embedding:BadX-neg-SDXL, "
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 105,
+      "type": "Note",
+      "pos": [
+        2178.757701443378,
+        383.3050773609016
+      ],
+      "size": [
+        336.78251289513105,
+        193.47321240049814
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "IPAdapter Interpolation",
+      "properties": {},
+      "widgets_values": [
+        "Use the logic from IPAdapter Advanced nodes. Tiled IpAdapter is used in order to get the embeds from the full image, even outside of 1:1 aspect ratios. It uses batch logic to deliver the correct embed to the related timestep. \n\nJust set the weight, start at, end at min/max values and the sampler does all the math for you based on the wave type chosen in the first Interpolation Wave Controller node\n\nThis is a very compute hungry step, if it's taking too long you can speed it up by resizing your images to 224x224 before sending them to the IP Adapter"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      3,
+      4,
+      1,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      5,
+      4,
+      1,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      16,
+      4,
+      2,
+      17,
+      3,
+      "VAE"
+    ],
+    [
+      40,
+      4,
+      2,
+      31,
+      1,
+      "VAE"
+    ],
+    [
+      41,
+      4,
+      2,
+      32,
+      1,
+      "VAE"
+    ],
+    [
+      47,
+      40,
+      0,
+      31,
+      0,
+      "IMAGE"
+    ],
+    [
+      49,
+      39,
+      0,
+      32,
+      0,
+      "IMAGE"
+    ],
+    [
+      50,
+      4,
+      1,
+      19,
+      0,
+      "CLIP"
+    ],
+    [
+      102,
+      7,
+      0,
+      64,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      103,
+      21,
+      0,
+      64,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      104,
+      4,
+      2,
+      64,
+      5,
+      "VAE"
+    ],
+    [
+      108,
+      64,
+      1,
+      62,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      113,
+      4,
+      2,
+      62,
+      5,
+      "VAE"
+    ],
+    [
+      115,
+      21,
+      0,
+      62,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      117,
+      26,
+      0,
+      65,
+      0,
+      "WAVE_CONFIG"
+    ],
+    [
+      118,
+      65,
+      0,
+      64,
+      4,
+      "WAVE_CONFIG"
+    ],
+    [
+      119,
+      64,
+      2,
+      62,
+      4,
+      "WAVE_CONFIG"
+    ],
+    [
+      149,
+      4,
+      2,
+      74,
+      1,
+      "VAE"
+    ],
+    [
+      151,
+      74,
+      0,
+      73,
+      0,
+      "IMAGE"
+    ],
+    [
+      152,
+      73,
+      0,
+      75,
+      0,
+      "IMAGE"
+    ],
+    [
+      153,
+      20,
+      0,
+      39,
+      0,
+      "IMAGE"
+    ],
+    [
+      154,
+      37,
+      0,
+      40,
+      0,
+      "IMAGE"
+    ],
+    [
+      190,
+      62,
+      2,
+      86,
+      0,
+      "WAVE_CONFIG"
+    ],
+    [
+      206,
+      90,
+      1,
+      91,
+      1,
+      "IPADAPTER"
+    ],
+    [
+      207,
+      90,
+      0,
+      91,
+      0,
+      "MODEL"
+    ],
+    [
+      208,
+      91,
+      0,
+      92,
+      0,
+      "MODEL"
+    ],
+    [
+      210,
+      86,
+      0,
+      91,
+      6,
+      "WAVE_CONFIG"
+    ],
+    [
+      211,
+      91,
+      1,
+      92,
+      6,
+      "WAVE_CONFIG"
+    ],
+    [
+      213,
+      40,
+      0,
+      91,
+      2,
+      "IMAGE"
+    ],
+    [
+      214,
+      39,
+      0,
+      92,
+      2,
+      "IMAGE"
+    ],
+    [
+      215,
+      90,
+      1,
+      92,
+      1,
+      "IPADAPTER"
+    ],
+    [
+      250,
+      100,
+      0,
+      99,
+      0,
+      "IMAGE"
+    ],
+    [
+      258,
+      92,
+      0,
+      102,
+      0,
+      "MODEL"
+    ],
+    [
+      259,
+      64,
+      0,
+      102,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      260,
+      62,
+      0,
+      102,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      261,
+      62,
+      1,
+      102,
+      3,
+      "CONDITIONING"
+    ],
+    [
+      262,
+      31,
+      0,
+      102,
+      4,
+      "LATENT"
+    ],
+    [
+      263,
+      32,
+      0,
+      102,
+      5,
+      "LATENT"
+    ],
+    [
+      265,
+      4,
+      2,
+      102,
+      7,
+      "VAE"
+    ],
+    [
+      266,
+      102,
+      0,
+      17,
+      0,
+      "LATENT"
+    ],
+    [
+      267,
+      102,
+      0,
+      74,
+      0,
+      "LATENT"
+    ],
+    [
+      272,
+      40,
+      0,
+      64,
+      3,
+      "IMAGE"
+    ],
+    [
+      273,
+      39,
+      0,
+      62,
+      3,
+      "IMAGE"
+    ],
+    [
+      274,
+      92,
+      1,
+      100,
+      0,
+      "WAVE_CONFIG"
+    ],
+    [
+      275,
+      92,
+      1,
+      102,
+      6,
+      "WAVE_CONFIG"
+    ],
+    [
+      276,
+      19,
+      0,
+      62,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      277,
+      6,
+      0,
+      64,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      278,
+      4,
+      0,
+      90,
+      0,
+      "MODEL"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Group",
+      "bounding": [
+        836.2595264508917,
+        -195.00217325296265,
+        801.2422612587872,
+        578.2044312147292
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Group",
+      "bounding": [
+        1757.9715522499816,
+        -187.67467576972894,
+        776.2960669464417,
+        777.8210121681005
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Interpolation",
+      "bounding": [
+        2164.9177344489103,
+        820.3982380359065,
+        747.3365702969504,
+        763.2640483705824
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.4308988995278773,
+      "offset": [
+        997.943355200826,
+        577.5871539220433
+      ]
+    },
+    "frontendVersion": "1.28.8",
+    "VHS_latentpreview": true,
+    "VHS_latentpreviewrate": 12,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

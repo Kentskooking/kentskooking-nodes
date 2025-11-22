@@ -110,7 +110,6 @@ class VideoInterpolateSampler:
         tensor_B = latents_B["samples"]
         
         # Validation: Check dimensions (Batch, Channel, Height, Width)
-        # Dim 0 is batch (frames), which can differ. Dims 1, 2, 3 must match.
         if tensor_A.shape[1:] != tensor_B.shape[1:]:
             raise ValueError(f"Latent Shape Mismatch! Video A: {tensor_A.shape}, Video B: {tensor_B.shape}. "
                              "Videos must have the same height, width, and channel count to be interpolated.")
@@ -120,26 +119,17 @@ class VideoInterpolateSampler:
         
         overlap_frames = wave_config.get("overlap_frames", 25)
         
-        # Validation
         if len_A < overlap_frames or len_B < overlap_frames:
             raise ValueError(f"Video inputs too short! Overlap is {overlap_frames}, but videos are {len_A} and {len_B} frames.")
 
         # 1. Slice Segments
-        # Segment 1: Video A (Start -> len_A - overlap) - untouched
-        # Segment 2: Morph Zone (overlap frames)
-        # Segment 3: Video B (overlap -> End) - untouched
-
         seg1_A = tensor_A[:-overlap_frames]
-
         morph_A = tensor_A[-overlap_frames:]
         morph_B = tensor_B[:overlap_frames]
-
         seg3_B = tensor_B[overlap_frames:]
 
-        # Check for edge case: overlap equals video length (no untouched frames)
         if seg1_A.shape[0] == 0 and seg3_B.shape[0] == 0:
             print(f"\n⚠️  WARNING: Overlap ({overlap_frames}) equals video length - entire output will be morphed!")
-            print(f"   Consider reducing overlap to preserve some untouched frames from each video.\n")
 
         print(f"\n{'='*60}")
         print(f"VideoInterpolateSampler: Stitching Seamless Video")
@@ -150,21 +140,24 @@ class VideoInterpolateSampler:
         print(f"{'='*60}\n")
 
         # --------------------------------------------------------------------------------
-        # IPAdapter Setup
+        # Setup & Config Extraction
         # --------------------------------------------------------------------------------
         ipadapter_enabled = wave_config.get("ipadapter_enabled", False) and IPADAPTER_AVAILABLE
-        ipadapter_data = {}
+
+        # Initialize Tiled Processor if needed
         tiled_processor = None
-        
         if ipadapter_enabled:
-            # Initialize Tiled Processor
             tiled_processor = IPAdapterTiled()
-            
-            # Extract Config
+            # Enable batch unfolding for weight lists
+            tiled_processor.unfold_batch = True 
+
+        # Extract IPAdapter Data
+        ipadapter_data = {}
+        if ipadapter_enabled:
+            # ... (Existing extraction logic) ...
             ipadapter_model = wave_config.get("ipadapter_model")
             clipvision_model = wave_config.get("ipadapter_clip_vision")
             
-            # Handle Dictionary Format (WaveIPAdapterAdvanced vs others)
             if isinstance(ipadapter_model, dict) and "ipadapter" in ipadapter_model:
                 actual_ipadapter = ipadapter_model["ipadapter"]["model"]
                 actual_clipvision = ipadapter_model["clipvision"]["model"]
@@ -184,78 +177,63 @@ class VideoInterpolateSampler:
                 "image_negative": wave_config.get("ipadapter_image_negative"),
                 "attn_mask": wave_config.get("ipadapter_attn_mask"),
             }
-
-            # Determine Image Sequences for A and B
+            
+            # Image Sequence Logic
             seq = wave_config.get("ipadapter_image_sequence") or []
             single_img = wave_config.get("ipadapter_image")
-
             frames_A = []
             frames_B = []
-            
             if len(seq) >= 2 * overlap_frames:
-                # Tiled/Batch Mode: Exact frames provided for overlap region
-                print(f"  IPAdapter: Using individual frames for overlap (Sequence len: {len(seq)})")
                 frames_A = seq[:overlap_frames]
                 frames_B = seq[overlap_frames:2*overlap_frames]
             elif len(seq) >= 2:
-                # Static A/B Mode: Two images provided
-                print(f"  IPAdapter: Using static images for Video A and Video B")
                 frames_A = [seq[0]] * overlap_frames
                 frames_B = [seq[1]] * overlap_frames
             elif single_img is not None:
-                # Single Image Fallback
-                print(f"  IPAdapter: Using single image for both A and B")
                 frames_A = [single_img] * overlap_frames
                 frames_B = [single_img] * overlap_frames
             else:
-                print("  ⚠ Warning: IPAdapter enabled but no images found. Disabling.")
                 ipadapter_enabled = False
-
+            
             ipadapter_data["frames_A"] = frames_A
             ipadapter_data["frames_B"] = frames_B
 
         # --------------------------------------------------------------------------------
+        # ITERATIVE MODE (Frame-by-Frame)
+        # --------------------------------------------------------------------------------
+        
+        processed_morph_frames_list = []
 
-        processed_morph_frames = []
-
-        # Initialize previous latent for feedback from the last frame of Segment 1 (A)
-        # Fallback to first morph frame if seg1_A is empty (overlap == video length)
+        # Initialize previous latent
         if seg1_A.shape[0] > 0:
             previous_latent = seg1_A[-1:]
         else:
-            # No untouched frames before morph zone - use first morph frame as initial reference
             previous_latent = morph_A[0:1]
-        
-        # 2. Process Morph Zone
+
         for i in range(overlap_frames):
-            # Interpolation factor t (0.0 -> 1.0)
             t = i / (overlap_frames - 1) if overlap_frames > 1 else 0.5
             
-            # 1. Blend Latents
+            # Blend Latents
             latent_a_frame = morph_A[i:i+1]
             latent_b_frame = morph_B[i:i+1]
             blended_latent = latent_a_frame * (1.0 - t) + latent_b_frame * t
             
-            # Apply feedback: blend previous result into current noisy input
-            # This stabilizes temporal flickering by dragging the input towards history
             if feedback_mode == "previous_frame":
-                alpha = 0.1 # Hardcoded small feedback factor for stability
+                alpha = 0.1
                 blended_latent = blended_latent * (1.0 - alpha) + previous_latent * alpha
             
-            # 2. Blend Conditioning (Base Embeddings)
+            # Blend Conditioning
             current_positive = self.interpolate_conditioning(positive_A, positive_B, t)
-            current_negative = negative # Initialize negative conditioning for this frame
+            current_negative = negative 
             
-            # 3. Apply ControlNets dynamically
-            # ControlNet A (Fading Out: Start at Max, End at Min)
+            # Apply ControlNets (Iterative)
             if len(positive_A) > 0 and "kentskooking_controlnet" in positive_A[0][1]:
+                 # ... (CN Logic A) ...
                  cn_data = positive_A[0][1]["kentskooking_controlnet"]
-                 # Frame Index: End of Video A + current morph index
                  frame_idx = len_A - overlap_frames + i
                  batch_size = cn_data["control_hint"].shape[0]
                  hint_idx = frame_idx % batch_size
                  hint = cn_data["control_hint"][hint_idx:hint_idx+1]
-                 
                  w_conf = cn_data["wave_config"]
                  s_min = w_conf.get("controlnet_strength_min", 0.0)
                  s_max = w_conf.get("controlnet_strength_max", 1.0)
@@ -263,26 +241,21 @@ class VideoInterpolateSampler:
                  start_max = w_conf.get("controlnet_start_at_max", 0.0)
                  end_min = w_conf.get("controlnet_end_at_min", 1.0)
                  end_max = w_conf.get("controlnet_end_at_max", 1.0)
-
-                 # A fades OUT: t=0 is Max, t=1 is Min
                  strength = s_max * (1.0 - t) + s_min * t
                  start_at = start_max * (1.0 - t) + start_min * t
                  end_at = end_max * (1.0 - t) + end_min * t
-                 
                  current_positive, current_negative = apply_controlnet_wrapper(
                      current_positive, current_negative,
                      cn_data["control_net"], hint, strength, start_at, end_at, vae=cn_data["vae"]
                  )
 
-            # ControlNet B (Fading In: Start at Min, End at Max)
             if len(positive_B) > 0 and "kentskooking_controlnet" in positive_B[0][1]:
+                 # ... (CN Logic B) ...
                  cn_data = positive_B[0][1]["kentskooking_controlnet"]
-                 # Frame Index: Start of Video B (which is just i)
                  frame_idx = i
                  batch_size = cn_data["control_hint"].shape[0]
                  hint_idx = frame_idx % batch_size
                  hint = cn_data["control_hint"][hint_idx:hint_idx+1]
-                 
                  w_conf = cn_data["wave_config"]
                  s_min = w_conf.get("controlnet_strength_min", 0.0)
                  s_max = w_conf.get("controlnet_strength_max", 1.0)
@@ -290,47 +263,35 @@ class VideoInterpolateSampler:
                  start_max = w_conf.get("controlnet_start_at_max", 0.0)
                  end_min = w_conf.get("controlnet_end_at_min", 1.0)
                  end_max = w_conf.get("controlnet_end_at_max", 1.0)
-
-                 # B fades IN: t=0 is Min, t=1 is Max
                  strength = s_min * (1.0 - t) + s_max * t
                  start_at = start_min * (1.0 - t) + start_max * t
                  end_at = end_min * (1.0 - t) + end_max * t
-                 
                  current_positive, current_negative = apply_controlnet_wrapper(
                      current_positive, current_negative,
                      cn_data["control_net"], hint, strength, start_at, end_at, vae=cn_data["vae"]
                  )
-            
-            # 4. Apply IPAdapter (Crossfade A -> B)
+
+            # Apply IPAdapter (Iterative)
             current_model = model
-            if ipadapter_enabled and tiled_processor is not None:
-                # Retrieve Min/Max values (from Controller or defaults)
+            if ipadapter_enabled:
                 w_static = ipadapter_data["weight"]
                 w_min = wave_config.get("ipadapter_weight_min", 0.0)
                 w_max = wave_config.get("ipadapter_weight_max", w_static)
-                
                 start_static = ipadapter_data["start_at"]
                 start_min = wave_config.get("ipadapter_start_at_min", 0.0)
                 start_max = wave_config.get("ipadapter_start_at_max", start_static)
-                
                 end_static = ipadapter_data["end_at"]
                 end_min = wave_config.get("ipadapter_end_at_min", 1.0)
                 end_max = wave_config.get("ipadapter_end_at_max", end_static)
                 
-                # Calculate A (Fades OUT: Max -> Min)
                 weight_A = w_max * (1.0 - t) + w_min * t
                 start_A = start_max * (1.0 - t) + start_min * t
                 end_A = end_max * (1.0 - t) + end_min * t
-                
-                # Calculate B (Fades IN: Min -> Max)
                 weight_B = w_min * (1.0 - t) + w_max * t
                 start_B = start_min * (1.0 - t) + start_max * t
                 end_B = end_min * (1.0 - t) + end_max * t
                 
-                # Clone model to prevent stacking across iterations
                 current_model = model.clone()
-                
-                # Apply A (using Tiled logic)
                 if weight_A > 0:
                     current_model, _, _ = tiled_processor.apply_tiled(
                         current_model,
@@ -340,15 +301,13 @@ class VideoInterpolateSampler:
                         weight_type=ipadapter_data["weight_type"],
                         start_at=start_A,
                         end_at=end_A,
-                        sharpening=0.0, # Default sharpening
+                        sharpening=0.0,
                         combine_embeds=ipadapter_data["combine_embeds"],
                         image_negative=ipadapter_data["image_negative"],
                         attn_mask=ipadapter_data["attn_mask"],
                         clip_vision=ipadapter_data["clipvision"],
                         embeds_scaling=ipadapter_data["embeds_scaling"],
                     )
-                
-                # Apply B (using Tiled logic)
                 if weight_B > 0:
                     current_model, _, _ = tiled_processor.apply_tiled(
                         current_model,
@@ -358,7 +317,7 @@ class VideoInterpolateSampler:
                         weight_type=ipadapter_data["weight_type"],
                         start_at=start_B,
                         end_at=end_B,
-                        sharpening=0.0, # Default sharpening
+                        sharpening=0.0,
                         combine_embeds=ipadapter_data["combine_embeds"],
                         image_negative=ipadapter_data["image_negative"],
                         attn_mask=ipadapter_data["attn_mask"],
@@ -366,55 +325,38 @@ class VideoInterpolateSampler:
                         embeds_scaling=ipadapter_data["embeds_scaling"],
                     )
 
-            # 5. Calculate Denoise (Bell Curve or Selected Wave)
-            # Position 0..overlap. Bell curve peaks at overlap/2.
+            # Denoise
             denoise_min = wave_config.get("denoise_min", 0.1)
             denoise_max = wave_config.get("denoise_max", 0.6)
             current_wave_type = wave_config.get("wave_type", "bell_curve")
-            
-            # Use helper (defaults to bell_curve if wave_type is bell_curve in config)
             base_denoise = calculate_wave(current_wave_type, i, overlap_frames, denoise_min, denoise_max)
-            
-            # Seam Smoothing: Force denoise to 0 at the edges to prevent style jumps
-            # We apply a window that is 0 at the ends and ramps to 1 quickly.
-            # Ramp length = 10% of overlap (min 1 frame)
             ramp_len = max(1, int(overlap_frames * 0.1))
-            
             if i < ramp_len:
                 edge_factor = i / ramp_len
             elif i >= overlap_frames - ramp_len:
                 edge_factor = (overlap_frames - 1 - i) / ramp_len
             else:
                 edge_factor = 1.0
-            
             denoise = base_denoise * edge_factor
 
             print(f"Morph Frame {i+1}/{overlap_frames}: Blend={t:.2f}, Denoise={denoise:.2f}, Steps={steps}")
 
-            # Skip frames with zero denoise - no point running sampler
             if denoise <= 0.0:
-                processed_morph_frames.append(blended_latent)
+                processed_morph_frames_list.append(blended_latent)
                 previous_latent = blended_latent
                 continue
             
             latent_dict = {"samples": blended_latent}
-            
-            # Run Sampler
-            # Note: we use 'steps' as the total scheduler steps, but 'denoise' limits how much work is done.
             result = nodes.common_ksampler(
                 current_model, seed, steps, cfg, sampler_name, scheduler,
                 current_positive, current_negative, latent_dict,
                 denoise=denoise
             )
-            
-            processed_morph_frames.append(result[0]["samples"])
-            
-            # Update previous_latent with the result of this frame for the next iteration's feedback
+            processed_morph_frames_list.append(result[0]["samples"])
             previous_latent = result[0]["samples"]
-
-        # 3. Concatenate
-        morph_tensor = torch.cat(processed_morph_frames, dim=0)
         
+        morph_tensor = torch.cat(processed_morph_frames_list, dim=0)
+
         # Final stitch
         final_output = torch.cat([seg1_A, morph_tensor, seg3_B], dim=0)
         

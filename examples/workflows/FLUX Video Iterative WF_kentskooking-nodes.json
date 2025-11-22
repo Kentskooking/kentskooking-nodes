@@ -1,8 +1,8 @@
 {
   "id": "d713d62e-b36a-47b1-b228-c18110911a82",
   "revision": 0,
-  "last_node_id": 54,
-  "last_link_id": 71,
+  "last_node_id": 55,
+  "last_link_id": 72,
   "nodes": [
     {
       "id": 4,
@@ -101,8 +101,8 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "link": 63
+          "type": "WAVE_CONFIG",
+          "link": 72
         }
       ],
       "outputs": [
@@ -115,7 +115,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "links": [
             11
           ]
@@ -611,7 +611,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": 11
         }
       ],
@@ -625,7 +625,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "links": [
             66
           ]
@@ -840,30 +840,6 @@
       "bgcolor": "#335"
     },
     {
-      "id": 40,
-      "type": "Note",
-      "pos": [
-        -1305.2579187259616,
-        862.9589648469818
-      ],
-      "size": [
-        357.5157701087005,
-        366.2736593142304
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "General Wave Guidlines",
-      "properties": {},
-      "widgets_values": [
-        "I suggest doing your own tests, each case is a bit different but here are some of my findings:\n\nSTEPS:\n\nSubtle but noticeable effect:\nStep floor: 5\nStart at Step: 16\nEnd at Step: 26\n\nMore dramatic trippy effect:\nStep floor: 5\nStart at Step: 16\nEnd at Step: 36\n\nZOOM:\n\nThis depends on the length of your cycle. With bigger cycle lengths you can do large zooms. Probably even 2 or higher \n\nBut for most cycles below 100 I find that 1.25 is a pretty nice zoom_max. You can make your zoom less than 1.00 but there's no masking setup in the node so it's just gonna be that latent brownian noise around the edges.\n\nCLAMP VALUES:\n\nIf you want a consistent value across steps just use the same min and max and it'll stay fixed"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
       "id": 48,
       "type": "Note",
       "pos": [
@@ -875,7 +851,7 @@
         137.66096801950658
       ],
       "flags": {},
-      "order": 10,
+      "order": 9,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -899,7 +875,7 @@
         90.27374977196314
       ],
       "flags": {},
-      "order": 11,
+      "order": 10,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -922,7 +898,7 @@
         130
       ],
       "flags": {},
-      "order": 12,
+      "order": 11,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -960,7 +936,7 @@
         340.5365321668776
       ],
       "flags": {},
-      "order": 13,
+      "order": 12,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1015,48 +991,6 @@
       "bgcolor": "#335"
     },
     {
-      "id": 54,
-      "type": "WaveController",
-      "pos": [
-        -917.7576698003718,
-        862.5748075437775
-      ],
-      "size": [
-        360,
-        226
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "links": [
-            63
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "Kentskooking/kentskooking-nodes",
-        "ver": "022162726c5a41b42109302eacd05845de81262c",
-        "Node name for S&R": "WaveController"
-      },
-      "widgets_values": [
-        37,
-        5,
-        16,
-        36,
-        1,
-        1.2,
-        1,
-        1
-      ],
-      "color": "#233",
-      "bgcolor": "#355"
-    },
-    {
       "id": 45,
       "type": "Note",
       "pos": [
@@ -1068,7 +1002,7 @@
         386.5829406013934
       ],
       "flags": {},
-      "order": 15,
+      "order": 13,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1079,6 +1013,73 @@
       ],
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 50,
+      "type": "Note",
+      "pos": [
+        -1279.0160423283255,
+        199.06549086014397
+      ],
+      "size": [
+        342.11652653115925,
+        88
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "NOTE",
+      "properties": {},
+      "widgets_values": [
+        "When using redux you can leave the text prompt blank"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 55,
+      "type": "VideoWaveController",
+      "pos": [
+        -915.4200129042111,
+        834.272728028767
+      ],
+      "size": [
+        360,
+        250
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            72
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "f4404010fbf6daaba126fcf2198d0b688470f336",
+        "Node name for S&R": "VideoWaveController"
+      },
+      "widgets_values": [
+        "triangle",
+        37,
+        5,
+        16,
+        36,
+        1,
+        1.2,
+        1,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
     },
     {
       "id": 53,
@@ -1117,7 +1118,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": 66
         },
         {
@@ -1151,36 +1152,36 @@
         473470593245071,
         "randomize",
         true,
-        "euler",
-        "simple",
+        "deis",
+        "beta",
         1,
-        0.1,
+        0.01,
         false,
-        "none"
+        "previous_frame"
       ],
       "color": "#332922",
       "bgcolor": "#593930"
     },
     {
-      "id": 50,
+      "id": 40,
       "type": "Note",
       "pos": [
-        -1279.0160423283255,
-        199.06549086014397
+        -1294.7882773646302,
+        837.8317829787076
       ],
       "size": [
-        342.11652653115925,
-        88
+        358.0530063935637,
+        417.85052877008775
       ],
       "flags": {},
       "order": 16,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "NOTE",
+      "title": "General Wave Guidlines",
       "properties": {},
       "widgets_values": [
-        "When using redux you can leave the text prompt blank"
+        "I suggest doing your own tests, each case is a bit different but here are some of my findings:\n\nSTEPS:\n\nSubtle but noticeable effect:\nStep floor: 5\nStart at Step: 16\nEnd at Step: 26\n\nMore dramatic trippy effect:\nStep floor: 5\nStart at Step: 16\nEnd at Step: 36\n\nWAVE TYPE:\n\nSelect the wavetype you want the setting ranges to follow\n\nZOOM:\n\nThis depends on the length of your cycle. With bigger cycle lengths you can do large zooms. Probably even 2 or higher \n\nBut for most cycles below 100 I find that 1.25 is a pretty nice zoom_max. You can make your zoom less than 1.00 but there's no masking setup in the node so it's just gonna be that latent brownian noise around the edges.\n\nCLAMP VALUES:\n\nIf you want a consistent value across steps just use the same min and max and it'll stay fixed"
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -1316,14 +1317,6 @@
       "MODEL"
     ],
     [
-      63,
-      54,
-      0,
-      1,
-      2,
-      "TRIANGLE_WAVE_CONFIG"
-    ],
-    [
       64,
       52,
       0,
@@ -1386,6 +1379,14 @@
       20,
       0,
       "LATENT"
+    ],
+    [
+      72,
+      55,
+      0,
+      1,
+      2,
+      "WAVE_CONFIG"
     ]
   ],
   "groups": [
@@ -1406,10 +1407,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.47362440744770584,
+      "scale": 0.520986848192477,
       "offset": [
-        2611.4568566587113,
-        847.9566529685878
+        2646.057639276315,
+        757.1600216676786
       ]
     },
     "frontendVersion": "1.28.8",

@@ -1,8 +1,8 @@
 {
   "id": "223825ad-c44b-4e82-9d0b-3cc6b2ecd8b3",
   "revision": 0,
-  "last_node_id": 32,
-  "last_link_id": 0,
+  "last_node_id": 38,
+  "last_link_id": 1,
   "nodes": [
     {
       "id": 27,
@@ -41,7 +41,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": null
         },
         {
@@ -87,8 +87,8 @@
       "id": 26,
       "type": "IterativeCheckpointController",
       "pos": [
-        -389.99783929918186,
-        834.838027105063
+        -380.21363982391847,
+        1068.9065194760233
       ],
       "size": [
         360,
@@ -123,8 +123,8 @@
       "id": 29,
       "type": "CheckpointPreviewLoader",
       "pos": [
-        -389.99783929918186,
-        1034.4906777016054
+        -380.21363982391847,
+        1268.5591700725654
       ],
       "size": [
         360,
@@ -189,7 +189,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": null
         },
         {
@@ -232,156 +232,18 @@
       "bgcolor": "#593930"
     },
     {
-      "id": 32,
-      "type": "WaveController",
-      "pos": [
-        -788.9827092402033,
-        282.26383885276266
-      ],
-      "size": [
-        360,
-        226
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "links": null
-        }
-      ],
-      "properties": {
-        "aux_id": "Kentskooking/kentskooking-nodes",
-        "ver": "022162726c5a41b42109302eacd05845de81262c",
-        "Node name for S&R": "WaveController"
-      },
-      "widgets_values": [
-        60,
-        5,
-        16,
-        36,
-        1,
-        1.25,
-        0,
-        1
-      ],
-      "color": "#233",
-      "bgcolor": "#355"
-    },
-    {
-      "id": 21,
-      "type": "WaveIPAdapterController",
-      "pos": [
-        -392.72996723234513,
-        525.4197475361641
-      ],
-      "size": [
-        360,
-        178
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "links": null
-        }
-      ],
-      "properties": {
-        "aux_id": "Kentskooking/kentskooking-nodes",
-        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
-        "Node name for S&R": "WaveIPAdapterController"
-      },
-      "widgets_values": [
-        0.5,
-        1,
-        0,
-        0,
-        1,
-        1
-      ],
-      "color": "#233",
-      "bgcolor": "#355"
-    },
-    {
-      "id": 17,
-      "type": "WaveClipVisionEncode",
-      "pos": [
-        15.567974672269814,
-        -199.73178104105898
-      ],
-      "size": [
-        360,
-        98
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip_vision",
-          "type": "CLIP_VISION",
-          "link": null
-        },
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "clip_vision_output",
-          "type": "CLIP_VISION_OUTPUT",
-          "links": null
-        },
-        {
-          "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
-          "links": null
-        }
-      ],
-      "properties": {
-        "aux_id": "Kentskooking/kentskooking-nodes",
-        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
-        "Node name for S&R": "WaveClipVisionEncode"
-      },
-      "widgets_values": [
-        "center"
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
       "id": 22,
       "type": "WaveStyleModelApply",
       "pos": [
-        433.11717246273963,
-        -199.73178104105898
+        494.87209851571174,
+        308.7259083648638
       ],
       "size": [
         360,
         118
       ],
       "flags": {},
-      "order": 7,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -401,7 +263,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": null
         }
       ],
@@ -413,7 +275,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "links": null
         }
       ],
@@ -432,20 +294,20 @@
       "id": 23,
       "type": "WaveVisualizer",
       "pos": [
-        -786.2505813070394,
-        834.838027105063
+        -776.4663818317762,
+        1068.9065194760233
       ],
       "size": [
         360,
         106
       ],
       "flags": {},
-      "order": 8,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": null
         }
       ],
@@ -464,7 +326,7 @@
       "widgets_values": [
         100,
         1024,
-        512
+        "all"
       ],
       "color": "#222",
       "bgcolor": "#000"
@@ -481,19 +343,19 @@
         178
       ],
       "flags": {},
-      "order": 9,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": null
         }
       ],
       "outputs": [
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "links": null
         }
       ],
@@ -517,15 +379,15 @@
       "id": 18,
       "type": "WaveControlNetApply",
       "pos": [
-        433.11717246273963,
-        44.26821895894107
+        494.87209851571174,
+        552.7259083648638
       ],
       "size": [
         360,
         126
       ],
       "flags": {},
-      "order": 10,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -550,7 +412,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": null
         },
         {
@@ -573,7 +435,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "links": null
         }
       ],
@@ -590,15 +452,15 @@
       "id": 20,
       "type": "WaveIPAdapterAdvanced",
       "pos": [
-        433.11717246273963,
-        280.81526695561513
+        494.87209851571174,
+        789.2729563615378
       ],
       "size": [
         360,
         298
       ],
       "flags": {},
-      "order": 11,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -637,7 +499,7 @@
         {
           "name": "wave_config",
           "shape": 7,
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "link": null
         }
       ],
@@ -649,7 +511,7 @@
         },
         {
           "name": "wave_config",
-          "type": "TRIANGLE_WAVE_CONFIG",
+          "type": "WAVE_CONFIG",
           "links": null
         }
       ],
@@ -668,6 +530,301 @@
       ],
       "color": "#233",
       "bgcolor": "#355"
+    },
+    {
+      "id": 35,
+      "type": "VideoWaveController",
+      "pos": [
+        -778.7422175151515,
+        286.75754827061587
+      ],
+      "size": [
+        360,
+        250
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "VideoWaveController"
+      },
+      "widgets_values": [
+        "triangle",
+        60,
+        5,
+        16,
+        36,
+        1,
+        1.25,
+        0,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 38,
+      "type": "WaveClipVisionEncode",
+      "pos": [
+        89.83916869447792,
+        308.7259083648638
+      ],
+      "size": [
+        360,
+        98
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clip_vision_output",
+          "type": "CLIP_VISION_OUTPUT",
+          "links": null
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "WaveClipVisionEncode"
+      },
+      "widgets_values": [
+        "center"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 36,
+      "type": "ImageWaveController",
+      "pos": [
+        -782.3849003599878,
+        692.4261689710961
+      ],
+      "size": [
+        360,
+        202
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "ImageWaveController"
+      },
+      "widgets_values": [
+        5,
+        5,
+        16,
+        36,
+        1,
+        0,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 21,
+      "type": "WaveIPAdapterController",
+      "pos": [
+        -400.1358096108734,
+        716.4261689710961
+      ],
+      "size": [
+        360,
+        178
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "199d6dad23ed0248bc41e9a1c68696fcbb99ba89",
+        "Node name for S&R": "WaveIPAdapterController"
+      },
+      "widgets_values": [
+        0.5,
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 34,
+      "type": "InterpolationWaveController",
+      "pos": [
+        -396.8821926767391,
+        516.8687800514648
+      ],
+      "size": [
+        360,
+        130
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "InterpolationWaveController"
+      },
+      "widgets_values": [
+        25,
+        0.1,
+        0.6,
+        0.6
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 33,
+      "type": "VideoInterpolateSampler",
+      "pos": [
+        7.499869991426543,
+        -206.10656865915143
+      ],
+      "size": [
+        360,
+        342
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive_A",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "positive_B",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "latents_A",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "latents_B",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "bd35211caae58912208a68f99815974994bb721e",
+        "Node name for S&R": "VideoInterpolateSampler"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        20,
+        "euler",
+        "simple",
+        8,
+        "none"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
     }
   ],
   "links": [],
@@ -678,8 +835,8 @@
       "bounding": [
         -798.9827092402033,
         205.10684145573816,
-        776.252742007858,
-        508.3129060804256
+        771.5789349228643,
+        706.5335592613635
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -691,8 +848,8 @@
       "bounding": [
         -800.8040043428069,
         -279.70656865915146,
-        776.252742007858,
-        453.6
+        1189.6522474760236,
+        454.0226530255852
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -702,8 +859,8 @@
       "id": 3,
       "title": "CHECKPOINTS AND EXTRAS",
       "bounding": [
-        -796.2505813070394,
-        761.2380271050629,
+        -786.4663818317762,
+        995.3065194760234,
         776.252742007858,
         341.25265059654237
       ],
@@ -715,8 +872,8 @@
       "id": 4,
       "title": "INTEGRATIONS",
       "bounding": [
-        5.56797467226982,
-        -273.33178104105895,
+        67.32290072524263,
+        235.1259083648638,
         797.5491977904697,
         862.1470479966739
       ],
@@ -728,10 +885,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.544500000000004,
+      "scale": 0.4500000000000036,
       "offset": [
-        2154.8203146862206,
-        624.2412770183964
+        2463.0744539821876,
+        566.4953952949671
       ]
     },
     "frontendVersion": "1.28.8",
