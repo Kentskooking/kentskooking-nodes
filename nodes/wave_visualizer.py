@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-from ..utils.kentskooking_utils import calculate_wave, normalize_values
+from ..utils.kentskooking_utils import calculate_wave, normalize_values, calculate_explorer_path_strengths
 
 class WaveVisualizer:
     """
@@ -16,7 +16,18 @@ class WaveVisualizer:
                 "wave_config": ("WAVE_CONFIG",),
                 "width": ("INT", {"default": 800, "min": 100, "max": 2000}),
                 "height": ("INT", {"default": 400, "min": 100, "max": 2000}),
-                "wave_selector": (["all", "steps", "denoise", "zoom", "clip_strength", "controlnet_strength", "ipadapter_weight"], {"default": "all"}),
+                "wave_selector": ([
+                    "all",
+                    "steps",
+                    "denoise",
+                    "zoom",
+                    "clip_strength",
+                    "controlnet_strength",
+                    "ipadapter_weight",
+                    "positive_a_strength",
+                    "positive_b_strength",
+                    "positive_c_strength"
+                ], {"default": "all"}),
             }
         }
 
@@ -36,6 +47,16 @@ class WaveVisualizer:
             # For interpolation, the cycle IS the overlap duration. Show 1 full pass.
             preview_frames = cycle_length
             title_prefix = "Interpolation Morph"
+        elif controller_type == "explorer_conditioning":
+            # Explorer traversal is a single pass across strength ranges.
+            c_start_preview = float(wave_config.get("positive_c_start", 0.0))
+            c_end_preview = float(wave_config.get("positive_c_end", 0.0))
+            has_positive_c = abs(c_start_preview) > 1e-6 or abs(c_end_preview) > 1e-6
+            loop_requested = bool(wave_config.get("loop_video", False))
+            use_loop = loop_requested and has_positive_c
+            preview_frames = 240 if use_loop else (180 if has_positive_c else 120)
+            cycle_length = preview_frames
+            title_prefix = "Explorer Conditioning"
         elif controller_type == "image":
             # For image, show a few cycles to illustrate progression
             preview_frames = cycle_length * wave_config.get("cycle_count", 3)
@@ -178,6 +199,67 @@ class WaveVisualizer:
                 ip_vals.append(val)
             tracks.append({"id": "ipadapter_weight", "label": "IPAdapter Weight", "values": ip_vals, "color": (0, 255, 200), "range": (ip_min, ip_max)})
 
+        # --- EXPLORER CONDITIONING STRENGTHS ---
+        if controller_type == "explorer_conditioning" or "positive_a_start" in wave_config or "positive_b_start" in wave_config:
+            curve_type = wave_config.get("curve_type", "linear")
+            a_start = float(wave_config.get("positive_a_start", 0.0))
+            a_end = float(wave_config.get("positive_a_end", 1.0))
+            b_start = float(wave_config.get("positive_b_start", 1.0))
+            b_end = float(wave_config.get("positive_b_end", 0.0))
+            c_start = float(wave_config.get("positive_c_start", 0.0))
+            c_end = float(wave_config.get("positive_c_end", 0.0))
+            has_positive_c = abs(c_start) > 1e-6 or abs(c_end) > 1e-6
+            loop_requested = bool(wave_config.get("loop_video", False))
+            use_loop = loop_requested and has_positive_c
+
+            a_vals = []
+            b_vals = []
+            c_vals = []
+            for i in range(preview_frames):
+                a_strength, b_strength, c_strength = calculate_explorer_path_strengths(
+                    iteration_idx=i,
+                    iteration_count=preview_frames,
+                    curve_type=curve_type,
+                    positive_a_start=a_start,
+                    positive_a_end=a_end,
+                    positive_b_start=b_start,
+                    positive_b_end=b_end,
+                    positive_c_start=c_start,
+                    positive_c_end=c_end,
+                    has_positive_c=has_positive_c,
+                    loop_video=use_loop,
+                )
+                a_vals.append(a_strength)
+                b_vals.append(b_strength)
+                if has_positive_c:
+                    c_vals.append(c_strength)
+
+            tracks.append({
+                "id": "positive_a_strength",
+                "label": "Positive A Strength",
+                "values": a_vals,
+                "color": (255, 120, 0),
+                "range": (min(a_vals), max(a_vals)),
+                "overlay_group": "explorer_strengths",
+            })
+            tracks.append({
+                "id": "positive_b_strength",
+                "label": "Positive B Strength",
+                "values": b_vals,
+                "color": (0, 200, 255),
+                "range": (min(b_vals), max(b_vals)),
+                "overlay_group": "explorer_strengths",
+            })
+            if has_positive_c:
+                tracks.append({
+                    "id": "positive_c_strength",
+                    "label": "Positive C Strength",
+                    "values": c_vals,
+                    "color": (120, 255, 120),
+                    "range": (min(c_vals), max(c_vals)),
+                    "overlay_group": "explorer_strengths",
+                })
+
 
         # 3. Filter Tracks based on Selector
         if wave_selector != "all":
@@ -200,59 +282,125 @@ class WaveVisualizer:
         img = Image.new('RGB', (width, height), color=(20, 20, 20))
         draw = ImageDraw.Draw(img)
         
-        padding = 60
-        graph_w = width - (padding * 2)
-        graph_h = height - (padding * 2)
+        padding_x = 60
+        padding_top = 60
+        padding_bottom = 90
+        graph_w = width - (padding_x * 2)
+        graph_h = height - (padding_top + padding_bottom)
         
         # Draw Axis Box
-        draw.rectangle([padding, padding, width - padding, height - padding], outline=(60, 60, 60), width=2)
+        draw.rectangle(
+            [padding_x, padding_top, width - padding_x, height - padding_bottom],
+            outline=(60, 60, 60),
+            width=2,
+        )
         
         # Draw Cycle Lines
         num_cycles = int(np.ceil(preview_frames / cycle_length))
         for i in range(1, num_cycles):
-            cx = padding + int((i * cycle_length / preview_frames) * graph_w)
-            if cx < width - padding:
-                draw.line([(cx, padding), (cx, height - padding)], fill=(40, 40, 40), width=1)
+            cx = padding_x + int((i * cycle_length / preview_frames) * graph_w)
+            if cx < width - padding_x:
+                draw.line([(cx, padding_top), (cx, height - padding_bottom)], fill=(40, 40, 40), width=1)
 
-        # Calculate Band Layout
-        num_bands = len(tracks)
+        # Calculate Band Layout (supports overlay groups sharing one axis/band)
+        band_groups = []
+        overlay_group_index = {}
+
+        for track in tracks:
+            overlay_group = track.get("overlay_group")
+            if overlay_group:
+                if overlay_group not in overlay_group_index:
+                    overlay_group_index[overlay_group] = len(band_groups)
+                    band_groups.append({"tracks": [track], "overlay_group": overlay_group})
+                else:
+                    band_groups[overlay_group_index[overlay_group]]["tracks"].append(track)
+            else:
+                band_groups.append({"tracks": [track], "overlay_group": None})
+
+        num_bands = len(band_groups)
         band_h = graph_h / num_bands
+        legend_entries = []
         
-        for idx, track in enumerate(tracks):
-            band_top = padding + idx * band_h
+        for idx, band in enumerate(band_groups):
+            band_top = padding_top + idx * band_h
             band_bottom = band_top + band_h
             
             # Draw Band Separator
             if idx > 0:
-                draw.line([(padding, band_top), (width - padding, band_top)], fill=(40, 40, 40), width=1)
-            
-            # Normalize and Plot
-            values = track["values"]
-            v_min, v_max = track["range"]
-            
+                draw.line([(padding_x, band_top), (width - padding_x, band_top)], fill=(40, 40, 40), width=1)
+
+            band_tracks = band["tracks"]
+            if band["overlay_group"] is not None:
+                v_min = min(min(t["values"]) for t in band_tracks)
+                v_max = max(max(t["values"]) for t in band_tracks)
+            else:
+                v_min, v_max = band_tracks[0]["range"]
+
             # Safety for flat lines
             denom = v_max - v_min
-            if abs(denom) < 0.0001: denom = 1.0
-            
-            points = []
-            for i, val in enumerate(values):
-                x = padding + int((i / (preview_frames - 1)) * graph_w)
-                # Y is inverted (0 at top)
-                # Normalize 0..1 within band
-                norm_val = (val - v_min) / denom
-                y = band_bottom - 10 - int(norm_val * (band_h - 20))
-                points.append((x, y))
-            
-            if len(points) > 1:
-                draw.line(points, fill=track["color"], width=3)
-            
-            # Labels
-            label_text = f"{track['label']}: {v_min:.2f} - {v_max:.2f}"
-            draw.text((padding + 10, band_top + 5), label_text, fill=track["color"])
+            if abs(denom) < 0.0001:
+                denom = 1.0
+
+            for track_idx, track in enumerate(band_tracks):
+                values = track["values"]
+                points = []
+                for i, val in enumerate(values):
+                    x = padding_x + int((i / (preview_frames - 1)) * graph_w)
+                    # Y is inverted (0 at top)
+                    # Normalize 0..1 within band
+                    norm_val = (val - v_min) / denom
+                    y = band_bottom - 10 - int(norm_val * (band_h - 20))
+                    points.append((x, y))
+
+                if len(points) > 1:
+                    draw.line(points, fill=track["color"], width=3)
+
+                # Labels
+                if band["overlay_group"] is not None:
+                    label_text = f"{track['label']}: {min(values):.2f} - {max(values):.2f}"
+                else:
+                    label_text = f"{track['label']}: {v_min:.2f} - {v_max:.2f}"
+
+                legend_entries.append((track["color"], label_text))
+
+        # Draw separate legend below plot area (prevents text/curve overlap)
+        legend_y = height - padding_bottom + 12
+        legend_x = padding_x
+        legend_line_h = 16
+        for color, text in legend_entries:
+            try:
+                bbox = draw.textbbox((0, 0), text)
+                text_w = bbox[2] - bbox[0]
+            except Exception:
+                text_w = len(text) * 7
+
+            item_w = 16 + text_w + 20
+            if legend_x + item_w > width - padding_x:
+                legend_x = padding_x
+                legend_y += legend_line_h
+
+            draw.line([(legend_x, legend_y + 6), (legend_x + 12, legend_y + 6)], fill=color, width=3)
+            draw.text((legend_x + 16, legend_y), text, fill=color)
+            legend_x += item_w
 
         # Title
-        title = f"{title_prefix} - {wave_type.title()} Wave - Cycle: {cycle_length} frames"
-        draw.text((padding, 10), title, fill=(150, 150, 150))
+        if controller_type == "explorer_conditioning":
+            curve_label = wave_config.get("curve_type", "linear").replace("_", " ").title()
+            c_start_title = float(wave_config.get("positive_c_start", 0.0))
+            c_end_title = float(wave_config.get("positive_c_end", 0.0))
+            has_positive_c = abs(c_start_title) > 1e-6 or abs(c_end_title) > 1e-6
+            loop_requested = bool(wave_config.get("loop_video", False))
+            use_loop = loop_requested and has_positive_c
+            if use_loop:
+                path_label = "A->B->C->A"
+            elif has_positive_c:
+                path_label = "A->B->C"
+            else:
+                path_label = "A->B"
+            title = f"{title_prefix} - {curve_label} Curve - Path: {path_label} - Traversal: {preview_frames} frames"
+        else:
+            title = f"{title_prefix} - {wave_type.title()} Wave - Cycle: {cycle_length} frames"
+        draw.text((padding_x, 10), title, fill=(150, 150, 150))
 
         img_np = np.array(img).astype(np.float32) / 255.0
         img_tensor = torch.from_numpy(img_np).unsqueeze(0)

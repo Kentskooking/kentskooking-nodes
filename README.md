@@ -76,28 +76,21 @@ Advanced controller for start_step/end_step based sampling.
 - `clip_strength_min/max`: Range for CLIP conditioning strength (includes flux redux strength)
 
 #### VideoIterativeSampler
-Basic frame-by-frame video sampler with triangle wave support.
+Frame-by-frame video sampler with wave control and checkpointing.
 
 **Inputs:**
 - `model`: MODEL
 - `positive/negative`: CONDITIONING
 - `latent_batch`: LATENT (video frames)
-- `wave_config`: TRIANGLE_WAVE_CONFIG (optional)
+- `wave_config`: WAVE_CONFIG
 - `vae`: VAE (optional, for noise injection)
 - `seed`: Random seed
 - `sampler_name/scheduler`: Sampling settings
 - `cfg`: CFG scale
 - `noise_injection_strength`: Level of influence injected noise has (0.00-1.00)
-- `feedback_mode`: "none" or "previous_frame" (when enabled blends previous latent with current latent at 10%, exactly like the feedback sampler from 
-
-**Outputs:** `LATENT` (processed video frames)
-
-#### VideoIterativeSamplerAdvanced
-Advanced sampler with start_step/end_step control and checkpointing.
-
-**Inputs:** (same as basic sampler, plus:)
-- `checkpoint_config`: CHECKPOINT_CONFIG (optional)
 - `lock_injection_seed`: Lock noise seed across frames (boolean)
+- `feedback_mode`: "none" or "previous_frame" (when enabled blends previous latent with current latent at 10%)
+- `checkpoint_config`: CHECKPOINT_CONFIG (optional)
 
 **Outputs:** `LATENT` (processed video frames)
 
@@ -221,7 +214,7 @@ TriangleWaveControllerAdvanced
 VideoCheckpointController
   (enable_checkpointing=True, checkpoint_interval=16)
     ↓
-VideoIterativeSamplerAdvanced
+VideoIterativeSampler
   (wave_config, checkpoint_config, vae)
     ↓
 VAEDecode
@@ -244,7 +237,7 @@ WaveIPAdapterController
 WaveIPAdapterAdvanced
   (ipadapter, image_batch, wave_config)
     ↓
-VideoIterativeSamplerAdvanced
+VideoIterativeSampler
 ```
 
 ## How Triangle Waves Work
@@ -271,7 +264,7 @@ Min ────┴─     └────┘
 ### Creating a Checkpointed Run
 
 1. Add `VideoCheckpointController` with `enable_checkpointing=True`
-2. Connect to `VideoIterativeSamplerAdvanced`
+2. Connect to `VideoIterativeSampler`
 3. Connect a VAE (generates workflow metadata PNG)
 4. Run your workflow
 

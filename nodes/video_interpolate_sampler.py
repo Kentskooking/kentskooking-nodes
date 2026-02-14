@@ -3,7 +3,7 @@ import nodes
 import comfy.samplers
 import comfy.utils
 import comfy.model_management
-from ..utils.kentskooking_utils import calculate_wave, apply_controlnet_wrapper
+from ..utils.kentskooking_utils import calculate_wave, apply_controlnet_wrapper, apply_style_model_wrapper
 
 # Import IPAdapter classes
 try:
@@ -199,6 +199,33 @@ class VideoInterpolateSampler:
             ipadapter_data["frames_B"] = frames_B
 
         # --------------------------------------------------------------------------------
+        # Style Model Setup
+        # --------------------------------------------------------------------------------
+        style_model = wave_config.get("style_model")
+        style_strength_type = wave_config.get("style_strength_type", "multiply")
+        style_frames_A = []
+        style_frames_B = []
+        
+        if style_model is not None:
+            style_seq = wave_config.get("clip_vision_sequence") or []
+            style_single = wave_config.get("clip_vision_output")
+            
+            if len(style_seq) >= 2 * overlap_frames:
+                # Sequence A (first half), Sequence B (second half)
+                style_frames_A = style_seq[:overlap_frames]
+                style_frames_B = style_seq[overlap_frames:2*overlap_frames]
+            elif len(style_seq) >= 2:
+                # Static A, Static B
+                style_frames_A = [style_seq[0]] * overlap_frames
+                style_frames_B = [style_seq[1]] * overlap_frames
+            elif style_single is not None:
+                # Single style for both
+                style_frames_A = [style_single] * overlap_frames
+                style_frames_B = [style_single] * overlap_frames
+            else:
+                style_model = None # Disable if no clips
+
+        # --------------------------------------------------------------------------------
         # ITERATIVE MODE (Frame-by-Frame)
         # --------------------------------------------------------------------------------
         
@@ -226,6 +253,37 @@ class VideoInterpolateSampler:
             current_positive = self.interpolate_conditioning(positive_A, positive_B, t)
             current_negative = negative 
             
+            # Apply Style Model (Iterative A -> B)
+            if style_model is not None:
+                # Calculate modulated strength using wave settings if available
+                clip_min = wave_config.get("clip_strength_min", 1.0)
+                clip_max = wave_config.get("clip_strength_max", 1.0)
+                wave_type = wave_config.get("wave_type", "triangle")
+                
+                # Base strength for this frame (usually uniform max, or wave modulated)
+                # Since we are morphing, we usually want 'max' strength overall, split between A and B.
+                # But we can allow the 'overall' intensity to dip/peak based on the wave controller.
+                overall_strength = calculate_wave(wave_type, i, overlap_frames, clip_min, clip_max)
+                
+                # Strength A: Fades Out
+                strength_A = overall_strength * (1.0 - t)
+                # Strength B: Fades In
+                strength_B = overall_strength * t
+                
+                # Apply A
+                if strength_A > 0:
+                    current_positive = apply_style_model_wrapper(
+                        current_positive, style_model, style_frames_A[i],
+                        strength_A, style_strength_type
+                    )
+                
+                # Apply B
+                if strength_B > 0:
+                    current_positive = apply_style_model_wrapper(
+                        current_positive, style_model, style_frames_B[i],
+                        strength_B, style_strength_type
+                    )
+
             # Apply ControlNets (Iterative)
             if len(positive_A) > 0 and "kentskooking_controlnet" in positive_A[0][1]:
                  # ... (CN Logic A) ...

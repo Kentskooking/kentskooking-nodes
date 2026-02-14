@@ -179,7 +179,7 @@ class VideoIterativeSampler:
                 )
 
         print(f"\n{'='*60}")
-        print(f"VideoIterativeSamplerAdvanced: Processing {num_frames} frames")
+        print(f"VideoIterativeSampler: Processing {num_frames} frames")
         print(f"  Noise injection: {noise_injection_strength}")
         print(f"  Feedback mode: {feedback_mode}")
         print(f"  Wave cycle length: {wave_config.get('cycle_length', 'unknown')}")
@@ -400,7 +400,7 @@ class VideoIterativeSampler:
         all_latents = torch.cat(processed_latents, dim=0)
 
         print(f"\n{'='*60}")
-        print(f"VideoIterativeSamplerAdvanced: Complete! Processed {num_frames} frames")
+        print(f"VideoIterativeSampler: Complete! Processed {num_frames} frames")
 
         # Cleanup checkpoint on successful completion
         if enable_checkpoint:

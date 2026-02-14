@@ -13,6 +13,8 @@ from .nodes.wave_controlnet_apply import NODE_CLASS_MAPPINGS as WCNA_MAPPINGS, N
 from .nodes.wave_controlnet_controller import NODE_CLASS_MAPPINGS as WCNC_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as WCNC_DISPLAY
 from .nodes.iterative_checkpoint_controller import NODE_CLASS_MAPPINGS as ICC_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as ICC_DISPLAY
 from .nodes.checkpoint_preview_loader import NODE_CLASS_MAPPINGS as CPL_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as CPL_DISPLAY
+from .nodes.explorer_conditioning_wave_controller import NODE_CLASS_MAPPINGS as ECWC_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as ECWC_DISPLAY
+from .nodes.explorer_conditioning_sampler import NODE_CLASS_MAPPINGS as ECS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as ECS_DISPLAY
 
 NODE_CLASS_MAPPINGS = {
     **WC_MAPPINGS,
@@ -30,6 +32,8 @@ NODE_CLASS_MAPPINGS = {
     **WCNC_MAPPINGS,
     **ICC_MAPPINGS,
     **CPL_MAPPINGS,
+    **ECWC_MAPPINGS,
+    **ECS_MAPPINGS,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -48,6 +52,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     **WCNC_DISPLAY,
     **ICC_DISPLAY,
     **CPL_DISPLAY,
+    **ECWC_DISPLAY,
+    **ECS_DISPLAY,
 }
 
 WEB_DIRECTORY = "./js"

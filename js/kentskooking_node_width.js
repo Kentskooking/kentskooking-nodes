@@ -16,6 +16,8 @@ const TARGET_NODE_NAMES = new Set([
     "WaveControlNetController",
     "IterativeCheckpointController",
     "CheckpointPreviewLoader",
+    "ExplorerConditioningWaveController",
+    "ExplorerConditioningSampler",
 ]);
 
 let desiredWidth = null;

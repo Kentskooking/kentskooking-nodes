@@ -30,7 +30,22 @@ class WaveClipVisionEncode:
         the wave configuration for downstream per-cycle selection.
         """
         crop_image = crop == "center"
-        clip_output = clip_vision.encode_image(image, crop=crop_image)
+        batch_size = image.shape[0]
+        chunk_size = 16
+
+        # Process in chunks to reduce VRAM usage
+        if batch_size <= chunk_size:
+            clip_output = clip_vision.encode_image(image, crop=crop_image)
+        else:
+            chunk_outputs = []
+            for i in range(0, batch_size, chunk_size):
+                chunk = image[i:i+chunk_size]
+                chunk_output = clip_vision.encode_image(chunk, crop=crop_image)
+                chunk_outputs.append(chunk_output)
+
+            # Merge chunk outputs into single ClipVisionOutput
+            clip_output = self._merge_clip_outputs(chunk_outputs)
+
         config = dict(wave_config)
 
         sequence = self._split_clip_output(clip_output)
@@ -40,6 +55,27 @@ class WaveClipVisionEncode:
         config["clip_vision_output"] = clip_output
 
         return (clip_output, config)
+
+    def _merge_clip_outputs(self, outputs):
+        """
+        Merge multiple ClipVisionOutput objects into a single batched output.
+        """
+        if len(outputs) == 1:
+            return outputs[0]
+
+        merged = ClipVisionOutput()
+        attrs = list(vars(outputs[0]).keys())
+
+        for key in attrs:
+            values = [getattr(out, key) for out in outputs]
+            if isinstance(values[0], torch.Tensor):
+                # Concatenate tensors along batch dimension
+                merged[key] = torch.cat(values, dim=0)
+            else:
+                # Non-tensor attributes: use first value
+                merged[key] = values[0]
+
+        return merged
 
     def _split_clip_output(self, clip_output):
         """
