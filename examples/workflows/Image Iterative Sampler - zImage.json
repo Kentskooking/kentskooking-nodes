@@ -273,8 +273,8 @@
       "id": 56,
       "type": "CLIPTextEncode",
       "pos": [
-        2319.226477953622,
-        4360.170218939275
+        2333.2105493501826,
+        4429.216207745921
       ],
       "size": [
         400,
@@ -314,8 +314,8 @@
       "id": 52,
       "type": "ImageWaveController",
       "pos": [
-        2326.4298204098036,
-        4623.674836666496
+        2340.413891806364,
+        4692.720825473141
       ],
       "size": [
         360,
@@ -360,7 +360,7 @@
       ],
       "size": [
         220.52272033691406,
-        548.5227203369141
+        598.6534004211426
       ],
       "flags": {},
       "order": 11,
@@ -417,60 +417,19 @@
           "hidden": false,
           "paused": false,
           "params": {
-            "filename": "260324133543_00066.mp4",
+            "filename": "260324133543_00068.mp4",
             "subfolder": "260324",
             "type": "output",
             "format": "video/h264-mp4",
             "frame_rate": 12.000000000000002,
-            "workflow": "260324133543_00066.png",
-            "fullpath": "C:\\ComfyUI\\output\\260324\\260324133543_00066.mp4"
+            "workflow": "260324133543_00068.png",
+            "fullpath": "C:\\ComfyUI\\output\\260324\\260324133543_00068.mp4"
           },
           "muted": false
         }
       },
       "color": "#222",
       "bgcolor": "#000"
-    },
-    {
-      "id": 55,
-      "type": "CLIPTextEncode",
-      "pos": [
-        2317.5856345769153,
-        4112.507968188913
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 76
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            77
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "CLIPTextEncode"
-      },
-      "widgets_values": [
-        "This vertical, medium-framed digital art piece captures a surreal, chaotic explosion at a beach volleyball game from a low camera angle with a shallow depth of field. The scene is defined by a violent explosion centered behind a teal pickup truck in the midground, featuring a highly dynamic, molten texture with glowing particles and distorted fire shapes in shades of #FF4500, #FFD700, #000000, #006400, and #8B4513. The explosion dominates the frame, casting intense orange and yellow light that creates high-contrast, hard shadows and highlights on the surrounding elements. The pickup truck is damaged, with charred paint, shattered burning windows, and visible chrome trim, while the ground consists of fine, grainy sand with footprints. The background features a dark blue sky with silhouetted palm trees, creating a stark contrast between the warm fire and the cool environment.\n\nSix volleyballs with blue and yellow panels are frozen in mid-air or positioned across the scene: one on the sand, several suspended in flight, and one held by the female figure on the left. This figure, an athletic woman in a blue bikini top, is captured from the waist up, leaning forward with arms extended toward a ball, her body highlighted by the explosion's backlight. A second figure is partially visible on the right, wearing dark shorts and holding a ball. The composition is filled with suspended debris, including shattered car glass and sand particles. Must keep the explosion at the center, the pickup truck in the midground, the suspended volleyballs, the female figure reaching for a ball, the dark blue sky with palm trees, the sandy ground, the high-contrast lighting, and the low camera angle. Avoid smooth or soft lighting, blurred motion, realistic fire behavior, clear skies, figurative details that do not match the scene, low resolution, incorrect color palettes, impossible perspectives, cartoonish styles, and flat lighting."
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
     },
     {
       "id": 54,
@@ -556,6 +515,47 @@
       ],
       "color": "#223",
       "bgcolor": "#335"
+    },
+    {
+      "id": 55,
+      "type": "CLIPTextEncode",
+      "pos": [
+        2331.5697059734757,
+        4181.553956995558
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            77
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.13.0",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "This vertical, medium-framed digital art piece captures a surreal, chaotic explosion at a beach volleyball game from a low camera angle with a shallow depth of field. The scene is defined by a violent explosion centered behind a teal pickup truck in the midground, featuring a highly dynamic, molten texture with glowing particles and distorted fire shapes in shades of #FF4500, #FFD700, #000000, #006400, and #8B4513. The explosion dominates the frame, casting intense orange and yellow light that creates high-contrast, hard shadows and highlights on the surrounding elements. The pickup truck is damaged, with charred paint, shattered burning windows, and visible chrome trim, while the ground consists of fine, grainy sand with footprints. The background features a dark blue sky with silhouetted palm trees, creating a stark contrast between the warm fire and the cool environment.\n\nSix volleyballs with blue and yellow panels are frozen in mid-air or positioned across the scene: one on the sand, several suspended in flight, and one held by the female figure on the left. This figure, an athletic woman in a blue bikini top, is captured from the waist up, leaning forward with arms extended toward a ball, her body highlighted by the explosion's backlight. A second figure is partially visible on the right, wearing dark shorts and holding a ball. The composition is filled with suspended debris, including shattered car glass and sand particles. Must keep the explosion at the center, the pickup truck in the midground, the suspended volleyballs, the female figure reaching for a ball, the dark blue sky with palm trees, the sandy ground, the high-contrast lighting, and the low camera angle. Avoid smooth or soft lighting, blurred motion, realistic fire behavior, clear skies, figurative details that do not match the scene, low resolution, incorrect color palettes, impossible perspectives, cartoonish styles, and flat lighting."
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
     }
   ],
   "links": [
@@ -683,10 +683,10 @@
   "extra": {
     "workflowRendererVersion": "LG",
     "ds": {
-      "scale": 0.8390545288824249,
+      "scale": 1.351305709310442,
       "offset": [
-        -1064.2455922051886,
-        -3700.3856558044663
+        -2016.00102173813,
+        -3967.00932711473
       ]
     },
     "frontendVersion": "1.38.14",
