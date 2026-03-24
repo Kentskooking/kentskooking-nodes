@@ -1,0 +1,699 @@
+{
+  "id": "0a527501-4e3c-4131-b54e-3902e7d1171a",
+  "revision": 0,
+  "last_node_id": 58,
+  "last_link_id": 87,
+  "nodes": [
+    {
+      "id": 47,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        1957.2323888439832,
+        4627.410434605518
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "EmptySD3LatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 49,
+      "type": "VAELoader",
+      "pos": [
+        1956.6354717836302,
+        4508.616725435481
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            72,
+            74,
+            82
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.sft"
+      ],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 50,
+      "type": "UNETLoader",
+      "pos": [
+        1952.4566151393556,
+        4216.10949442121
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            80
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "z_image_turbo_bf16.safetensors",
+        "fp8_e4m3fn"
+      ],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 48,
+      "type": "CLIPLoader",
+      "pos": [
+        1951.8598073844523,
+        4348.6331704229815
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            76,
+            78
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen_3_4b.safetensors",
+        "lumina2",
+        "default"
+      ],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 51,
+      "type": "ImageIterativeSampler",
+      "pos": [
+        2894.026315552833,
+        4185.921245148054
+      ],
+      "size": [
+        360,
+        370
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 80
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 77
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 79
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 75
+        },
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "link": 71
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 72
+        },
+        {
+          "name": "checkpoint_config",
+          "shape": 7,
+          "type": "CHECKPOINT_CONFIG",
+          "link": 84
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent_batch",
+          "type": "LATENT",
+          "links": [
+            83
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "f9789e64c9f3d5402b69792a0cb20078bf87387e",
+        "Node name for S&R": "ImageIterativeSampler"
+      },
+      "widgets_values": [
+        53156549639903,
+        "randomize",
+        true,
+        "res_multistep",
+        "simple",
+        1,
+        0.1,
+        false,
+        "previous_iteration"
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 58,
+      "type": "IterativeCheckpointController",
+      "pos": [
+        2892.36187433735,
+        4623.569574293847
+      ],
+      "size": [
+        360,
+        130
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "checkpoint_config",
+          "type": "CHECKPOINT_CONFIG",
+          "links": [
+            84
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "f9789e64c9f3d5402b69792a0cb20078bf87387e",
+        "Node name for S&R": "IterativeCheckpointController"
+      },
+      "widgets_values": [
+        true,
+        25,
+        false,
+        ""
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 56,
+      "type": "CLIPTextEncode",
+      "pos": [
+        2319.226477953622,
+        4360.170218939275
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 78
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            79
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.13.0",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 52,
+      "type": "ImageWaveController",
+      "pos": [
+        2326.4298204098036,
+        4623.674836666496
+      ],
+      "size": [
+        360,
+        202
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wave_config",
+          "type": "WAVE_CONFIG",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Kentskooking/kentskooking-nodes",
+        "ver": "f9789e64c9f3d5402b69792a0cb20078bf87387e",
+        "Node name for S&R": "ImageWaveController"
+      },
+      "widgets_values": [
+        50,
+        2,
+        2,
+        6,
+        1.02,
+        0,
+        1
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 57,
+      "type": "VHS_VideoCombine",
+      "pos": [
+        3304.20436998209,
+        4183.044960505996
+      ],
+      "size": [
+        220.52272033691406,
+        548.5227203369141
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "LATENT",
+          "link": 83
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "meta_batch",
+          "shape": 7,
+          "type": "VHS_BatchManager",
+          "link": null
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 82
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Filenames",
+          "type": "VHS_FILENAMES",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-videohelpersuite",
+        "ver": "08e8df15db24da292d4b7f943c460dc2ab442b24",
+        "Node name for S&R": "VHS_VideoCombine"
+      },
+      "widgets_values": {
+        "frame_rate": 12.000000000000002,
+        "loop_count": 0,
+        "filename_prefix": "zImage",
+        "format": "video/h264-mp4",
+        "pix_fmt": "yuv420p",
+        "crf": 19,
+        "save_metadata": true,
+        "trim_to_audio": false,
+        "pingpong": false,
+        "save_output": true,
+        "videopreview": {
+          "hidden": false,
+          "paused": false,
+          "params": {
+            "filename": "260324133543_00066.mp4",
+            "subfolder": "260324",
+            "type": "output",
+            "format": "video/h264-mp4",
+            "frame_rate": 12.000000000000002,
+            "workflow": "260324133543_00066.png",
+            "fullpath": "C:\\ComfyUI\\output\\260324\\260324133543_00066.mp4"
+          },
+          "muted": false
+        }
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 55,
+      "type": "CLIPTextEncode",
+      "pos": [
+        2317.5856345769153,
+        4112.507968188913
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            77
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.13.0",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "This vertical, medium-framed digital art piece captures a surreal, chaotic explosion at a beach volleyball game from a low camera angle with a shallow depth of field. The scene is defined by a violent explosion centered behind a teal pickup truck in the midground, featuring a highly dynamic, molten texture with glowing particles and distorted fire shapes in shades of #FF4500, #FFD700, #000000, #006400, and #8B4513. The explosion dominates the frame, casting intense orange and yellow light that creates high-contrast, hard shadows and highlights on the surrounding elements. The pickup truck is damaged, with charred paint, shattered burning windows, and visible chrome trim, while the ground consists of fine, grainy sand with footprints. The background features a dark blue sky with silhouetted palm trees, creating a stark contrast between the warm fire and the cool environment.\n\nSix volleyballs with blue and yellow panels are frozen in mid-air or positioned across the scene: one on the sand, several suspended in flight, and one held by the female figure on the left. This figure, an athletic woman in a blue bikini top, is captured from the waist up, leaning forward with arms extended toward a ball, her body highlighted by the explosion's backlight. A second figure is partially visible on the right, wearing dark shorts and holding a ball. The composition is filled with suspended debris, including shattered car glass and sand particles. Must keep the explosion at the center, the pickup truck in the midground, the suspended volleyballs, the female figure reaching for a ball, the dark blue sky with palm trees, the sandy ground, the high-contrast lighting, and the low camera angle. Avoid smooth or soft lighting, blurred motion, realistic fire behavior, clear skies, figurative details that do not match the scene, low resolution, incorrect color palettes, impossible perspectives, cartoonish styles, and flat lighting."
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 54,
+      "type": "VAEEncode",
+      "pos": [
+        1963.090849804712,
+        4817.81965590976
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 73
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            75
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.13.0",
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": [],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 53,
+      "type": "LoadImage",
+      "pos": [
+        1956.244218691854,
+        4920.305338457099
+      ],
+      "size": [
+        282.11363983154297,
+        314
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            73
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.13.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "Explosion_at_beach_202603241545.jpeg",
+        "image"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    }
+  ],
+  "links": [
+    [
+      71,
+      52,
+      0,
+      51,
+      4,
+      "WAVE_CONFIG"
+    ],
+    [
+      72,
+      49,
+      0,
+      51,
+      5,
+      "VAE"
+    ],
+    [
+      73,
+      53,
+      0,
+      54,
+      0,
+      "IMAGE"
+    ],
+    [
+      74,
+      49,
+      0,
+      54,
+      1,
+      "VAE"
+    ],
+    [
+      75,
+      54,
+      0,
+      51,
+      3,
+      "LATENT"
+    ],
+    [
+      76,
+      48,
+      0,
+      55,
+      0,
+      "CLIP"
+    ],
+    [
+      77,
+      55,
+      0,
+      51,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      78,
+      48,
+      0,
+      56,
+      0,
+      "CLIP"
+    ],
+    [
+      79,
+      56,
+      0,
+      51,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      80,
+      50,
+      0,
+      51,
+      0,
+      "MODEL"
+    ],
+    [
+      82,
+      49,
+      0,
+      57,
+      3,
+      "VAE"
+    ],
+    [
+      83,
+      51,
+      0,
+      57,
+      0,
+      "LATENT"
+    ],
+    [
+      84,
+      58,
+      0,
+      51,
+      6,
+      "CHECKPOINT_CONFIG"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Group",
+      "bounding": [
+        1941.8598073844523,
+        4142.509494421211,
+        295.3725814595307,
+        600.9009401843056
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "workflowRendererVersion": "LG",
+    "ds": {
+      "scale": 0.8390545288824249,
+      "offset": [
+        -1064.2455922051886,
+        -3700.3856558044663
+      ]
+    },
+    "frontendVersion": "1.38.14",
+    "VHS_latentpreview": true,
+    "VHS_latentpreviewrate": 12,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
